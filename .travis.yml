@@ -1,11 +1,11 @@
 language: rust
 rust:
-- stable
-- beta
-- nightly
+    - stable
+    - beta
+    - nightly
 matrix:
-  allow_failures:
-  - rust: nightly
+    allow_failures:
+        - rust: nightly
 notifications:
-  slack:
-    secure: EIq2dMSxh+3yHWOE+ktVZStnugHLjVMguHBsKaak6Tqj7QT0tukDMRA/xA62V+mNDA9o7Ui0uvgFs6YVGRN8s0oyFFAsfnGMxkMEkH46eXb4d/49yLaA6+CdrepXl/TZ1SlG/N4krhHcBBBJfn8DGRlxXHOYgKVlQaNz/BgN1X5+C4B5fhToDem2OaYOad2uVzcZxOnRADbmPZakQGD1BfK01eFvedvgizBMMGTFq6mx8cOnSeeou/pp9OQWjBRgcn/GTrzvy725xYTFIuR71pBlHVr0alPDWl1qMjvv3WjgUXwD9V9/N5rEyizA7Cm0ic3mglDA3bjnQTgiUn3GgiNb14r74vHT5qWOL2+NW9QdF+xwH6z4XbdSTSKAJKTa8AB4Jf30pka4RiU4PQ4teDmnYGhl8JLhfWN+GSvxMSK7f24nNN2VhjAvKj+VguXcsHxWImtonn/Phgd3HVcBAitcZvQ9v8+gpZjM/G2XTM47zZCdVOQgGMTYLa5GIDdTQg0aHEXi2EMbhmubNR2mInoGyTMoXg5Ly8/+SNHtjZpOTwDjv1QXFoeJiNRXz8cT9ydaWA4PvD7oZufErj2bXspt81Spj5t2z/nuaJO9Y4bIBCaf7pO1YdFHa5KOnTsNPK5X9Q1r4faWSAc4aZIy+PhsZydp6CD+8LPX83zoX1w=
+    slack:
+        secure: EIq2dMSxh+3yHWOE+ktVZStnugHLjVMguHBsKaak6Tqj7QT0tukDMRA/xA62V+mNDA9o7Ui0uvgFs6YVGRN8s0oyFFAsfnGMxkMEkH46eXb4d/49yLaA6+CdrepXl/TZ1SlG/N4krhHcBBBJfn8DGRlxXHOYgKVlQaNz/BgN1X5+C4B5fhToDem2OaYOad2uVzcZxOnRADbmPZakQGD1BfK01eFvedvgizBMMGTFq6mx8cOnSeeou/pp9OQWjBRgcn/GTrzvy725xYTFIuR71pBlHVr0alPDWl1qMjvv3WjgUXwD9V9/N5rEyizA7Cm0ic3mglDA3bjnQTgiUn3GgiNb14r74vHT5qWOL2+NW9QdF+xwH6z4XbdSTSKAJKTa8AB4Jf30pka4RiU4PQ4teDmnYGhl8JLhfWN+GSvxMSK7f24nNN2VhjAvKj+VguXcsHxWImtonn/Phgd3HVcBAitcZvQ9v8+gpZjM/G2XTM47zZCdVOQgGMTYLa5GIDdTQg0aHEXi2EMbhmubNR2mInoGyTMoXg5Ly8/+SNHtjZpOTwDjv1QXFoeJiNRXz8cT9ydaWA4PvD7oZufErj2bXspt81Spj5t2z/nuaJO9Y4bIBCaf7pO1YdFHa5KOnTsNPK5X9Q1r4faWSAc4aZIy+PhsZydp6CD+8LPX83zoX1w=
