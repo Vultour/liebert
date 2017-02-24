@@ -9,13 +9,12 @@ use std::str::FromStr;
 use std::thread;
 use std::sync;
 
+mod agent;
 mod types;
 mod args;
 mod conf;
 mod logger;
 mod util;
-mod connector;
-mod plugins;
 mod watchdog;
 mod signals;
 
@@ -44,10 +43,11 @@ fn main(){
 
     // Determine log level
     let verbosity = u32::from_str(conf.get_unsafe(".args.verbose").as_str()).unwrap();
-    let log_level: log::LogLevelFilter;
-    if      (verbosity == 0) { log_level = log::LogLevelFilter::Warn;  }
-    else if (verbosity == 1) { log_level = log::LogLevelFilter::Info;  }
-    else                     { log_level = log::LogLevelFilter::Debug; }
+    let log_level = match verbosity {
+        0 => log::LogLevelFilter::Warn,
+        1 => log::LogLevelFilter::Info,
+        _ => log::LogLevelFilter::Debug
+    };
 
     // Initialize logging
     logger::init(log_level);
@@ -57,30 +57,27 @@ fn main(){
     debug!("Loaded configuration: {:#?}", conf);
 
     // Start the signal handler
-    let signal_handler: thread::JoinHandle<()>;
-    match signals::handle(
+    let signal_handler = match signals::handle(
         chan_signal::notify(&[chan_signal::Signal::INT, chan_signal::Signal::TERM]),
         tx_control.clone()
     ){
-        Ok(h)   => { signal_handler = h; },
-        Err(e)  => { panic!(e); }
+        Ok(h)   => h,
+        Err(e)  => panic!(e)
     }
 
     let mut watchdog = watchdog::Watchdog::new(tx_control.clone());
 
     // Start controller connector
-    let connector: connector::Connector;
-    match connector::Connector::new(conf.clone(), tx_control.clone()){
-        Ok(c)   => { connector = c; }
-        Err(e)  => { panic!(e); }
-    }
+    let connector = match agent::connector::Connector::new(conf.clone(), tx_control.clone()){
+        Ok(c)   => c,
+        Err(e)  => panic!(e)
+    };
 
     // Start plugins
-    let plugins_controller: plugins::Controller;
-    match plugins::Controller::new(conf.clone(), tx_control.clone()){
-        Ok(pc)  => { plugins_controller = pc; }
-        Err(e)  => { panic!(e); }
-    }
+    let plugins_controller = match agent::plugins::Controller::new(conf.clone(), tx_control.clone()){
+        Ok(pc)  => pc,
+        Err(e)  => panic!(e)
+    };
 
     watchdog.watch(connector.thread_handle);
     watchdog.watch(plugins_controller.thread_handle);
@@ -101,8 +98,17 @@ fn main(){
                     types::Message::Shutdown(m)     => {
                         info!("Received shutdown message on control channel - {}", m);
                         info!("Initiating shutdown");
-                        plugins_controller.channel_in.send(types::Message::Shutdown(String::from("Global shutdown")));
-                        connector.channel_in.send(types::Message::Shutdown(String::from("Global shutdown")));
+
+                        match plugins_controller.channel_in.send(types::Message::Shutdown(String::from("Global shutdown"))){
+                            Ok(_)   => {},
+                            Err(e)  => error!("There has been an error while trying to stop 'plugins_controller', if there is a previous error related to this module you can probably disregard this message. The error received was: {}", e)
+                        }
+
+                        match connector.channel_in.send(types::Message::Shutdown(String::from("Global shutdown"))){
+                            Ok(_)   => {},
+                            Err(e)  => error!("There has been an error while trying to stop 'connector', if there is a previous error related to this module you can probably disregard this message. The error received was: {}", e)
+                        }
+
                         break;
                     },
                     types::Message::LogInfo(m)      => { info!("{}", m); },
@@ -113,7 +119,7 @@ fn main(){
                 }
             },
             Err(e)  => {
-                panic!("FATAL ERROR: [BUG] All control channel senders have shut down");
+                panic!("FATAL ERROR: [BUG] All control channel senders have closed before normal shutdown was initiated");
             }
         }
     }
