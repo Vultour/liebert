@@ -39,8 +39,8 @@ impl Connector{
                             warn!("Couldn't connect to controller instance at '{}:{}', retry number {} - {}", host, port, retries,  e);
 
                             if (retries >= max_retries) && (max_retries > 0){
-                                error!("Controller connection could not b established in configured number of retries, shutting down");
-                                control_tx.send(types::Message::Shutdown(format!("Couldn't establish a connection to controller, giving up after {} retries", retries))).expect("FATAL ERROR: [BUG] Control channel hung up");
+                                error!("[connector] Controller connection could not be established in configured number of retries, shutting down");
+                                control_tx.send(types::Message::Shutdown(format!("[connector] Couldn't establish a connection to controller, giving up after {} retries", retries))).expect("FATAL ERROR: [BUG] Control channel hung up");
                                 return;
                             }
                         }

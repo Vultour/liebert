@@ -2,7 +2,10 @@ use std::thread;
 use std::sync;
 use std::time;
 
-use super::types;
+use ::types;
+
+
+pub type PluginTuple = (types::MessageSender, thread::JoinHandle)
 
 
 pub struct Controller{
@@ -19,10 +22,8 @@ impl Controller{
                 let control_tx = control_tx;
                 let plugin_rx = pipe_rx;
 
-                let (data_tx, data_rx) = sync::mpsc::channel();
-
-                start_default_plugins(conf.clone(), data_tx.clone());
-                start_extra_plugins(conf.clone(), data_tx.clone());
+                start_default_plugins(conf.clone(), pipe_tx.clone());
+                start_extra_plugins(conf.clone(), pipe_tx.clone());
 
                 for message in plugin_rx{
                     match message{
@@ -57,14 +58,21 @@ fn start_extra_plugins(c: types::complex::Configuration, data_tx: types::Message
 }
 
 
-fn default_start_cpu(pipe_tx: types::MessageSender) -> Result<types::MessageSender, String>{
-    let (pipe_plugin_tx, pipe_plugin_rx) = sync::mpsc::channel();
-    match thread::Builder::new().name(String::from("plugins_controller")).spawn(
-        move || {
-            
+fn is_shutdown(message: Result<types::Message, sync::mpsc::TryRecvError>) -> bool{
+    match message{
+        Err(e)  => {
+            match e{
+                sync::mpsc::TryRecvError::Disconnected  => { panic!("FATAL ERROR: [BUG] Plugin sender disconnected"); },
+                sync::mpsc::TryRecvError::Empty         => { }
+            }
+        },
+        Ok(msg) =>{
+            match msg{
+                types::Message::Shutdown(m) => { return true; }
+                _                           => { warn!("[BUG] Plugin received an uknown message, it will be ignored"); }
+            }
         }
-    ){
-        Ok(t)   => { return Ok(pipe_plugin_tx); }
-        Err(e)  => { return Err( format!("{}", e)); }
     }
+
+    false
 }
