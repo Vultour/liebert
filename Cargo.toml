@@ -14,11 +14,11 @@ chan = "0.1.18"
 
 [[bin]]
 name = "liebert-agent"
-path = "src/agent.rs"
+path = "src/agent-main.rs"
 
 [[bin]]
 name = "liebert-controller"
-path = "src/controller.rs"
+path = "src/controller-main.rs"
 
 [[bin]]
 name = "liebert-chkconf"
