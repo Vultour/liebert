@@ -7,7 +7,8 @@ pub fn wait_exec_result(wait: time::Duration, exec: &Fn() -> bool) -> Result<(),
 
     while start.elapsed() < wait{
         if exec(){ return Ok(()); }
-        thread::yield_now();
+        //thread::yield_now();
+        thread::sleep(time::Duration::from_millis(100));
     }
     
     Err(())
