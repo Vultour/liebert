@@ -26,16 +26,16 @@ impl Connector{
                 let mut retries: i32 = -1;
                 loop {
                     retries += 1;
-                    let host: String = conf.get_unsafe("controller.host");
-                    let port: i32 = i32::from_str(conf.get_unsafe("controller.port").as_str()).expect("FATAL ERROR: Couldn't convert 'controller.port' to an integer");
-                    let timeout: i64 = i64::from_str(conf.get_unsafe("controller.retry_timeout").as_str()).expect("FATAL ERROR: Couldn't convert 'controller.retry_timeout to an integer'");
+                    let host = &conf.get_unsafe("controller.host");
+                    let port = i32::from_str(&conf.get_unsafe("controller.port")).expect("FATAL ERROR: Couldn't convert 'controller.port' to an integer");
+                    let timeout: i64 = i64::from_str(&conf.get_unsafe("controller.retry_timeout")).expect("FATAL ERROR: Couldn't convert 'controller.retry_timeout to an integer'");
                     match net::TcpStream::connect(format!("{}:{}", host, port).as_str()){
                         Ok(stream)   => {
                             s = stream;
                             break;
                         }
                         Err(e)  => {
-                            let max_retries: i32 = i32::from_str(conf.get_unsafe("controller.max_retries").as_str()).expect("FATAL ERROR: Coulnd't convert 'controller.max_retries to an integer'");
+                            let max_retries: i32 = i32::from_str(&conf.get_unsafe("controller.max_retries")).expect("FATAL ERROR: Coulnd't convert 'controller.max_retries to an integer'");
                             warn!("Couldn't connect to controller instance at '{}:{}', retry number {} - {}", host, port, retries,  e);
 
                             if (retries >= max_retries) && (max_retries > 0){
@@ -49,7 +49,7 @@ impl Connector{
                     match util::wait_exec_result(
                         time::Duration::from_millis(
                             u64::from_str(
-                                conf.get_unsafe("controller.retry_timeout").as_str()
+                                &conf.get_unsafe("controller.retry_timeout")
                             ).expect("FATAL ERROR: Couldn't convert 'controller.retry_timeout to an integer'")
                         ),
                         &|| { should_abort(connector_rx.try_recv()) }
