@@ -3,6 +3,7 @@ extern crate log;
 extern crate toml;
 extern crate clap;
 extern crate chan_signal;
+extern crate regex;
 
 use std::str::FromStr;
 
@@ -21,7 +22,7 @@ mod signals;
 
 fn main(){
     let args: types::ConfigurationMap;
-    let mut conf: types::complex::Configuration;
+    let conf: types::complex::Configuration;
 
     // Create a control channel
     let (tx_control, rx_control) = sync::mpsc::channel();
@@ -42,7 +43,7 @@ fn main(){
     }
 
     // Determine log level
-    let verbosity = u32::from_str(conf.get_unsafe(".args.verbose").as_str()).unwrap();
+    let verbosity = u32::from_str(&conf.get_unsafe(".args.verbose")).unwrap();
     let log_level = match verbosity {
         0 => log::LogLevelFilter::Warn,
         1 => log::LogLevelFilter::Info,
@@ -57,13 +58,13 @@ fn main(){
     debug!("Loaded configuration: {:#?}", conf);
 
     // Start the signal handler
-    let signal_handler = match signals::handle(
+    match signals::handle(
         chan_signal::notify(&[chan_signal::Signal::INT, chan_signal::Signal::TERM]),
         tx_control.clone()
     ){
         Ok(h)   => h,
         Err(e)  => panic!(e)
-    }
+    };
 
     let mut watchdog = watchdog::Watchdog::new(tx_control.clone());
 
@@ -113,12 +114,34 @@ fn main(){
                     },
                     types::Message::LogInfo(m)      => { info!("{}", m); },
                     types::Message::LogDebug(m)     => { debug!("{}", m); },
-                    _                               => {
-                        info!("Unhandled message received on control channel - {}: {}", msg.get_type().to_uppercase(), msg.get_content());
+                    types::Message::Format(f)       => {
+                        debug!("Format received on control channel, see below");
+                        for format in f {
+                            match format {
+                                agent::plugins::Format::Gauge(name, hb, min, max)   => {
+                                    debug!(
+                                        "FORMAT: {} - {}s -- min:{} -- max:{}",
+                                        name, hb, min.unwrap_or(-1), max.unwrap_or(-1)
+                                    );
+                                },
+                                agent::plugins::Format::Counter(name, hb, min, max) => {
+                                    debug!(
+                                        "FORMAT: {} - {}s -- min:{} -- max:{}",
+                                        name, hb, min.unwrap_or(-1), max.unwrap_or(-1)
+                                    );
+                                }
+                            }
+                        }
+                    },
+                    types::Message::Data((id, m))   => {
+                        debug!(
+                            "Data received on control channel from plugin '{}': {}",
+                            id, m
+                        );
                     }
                 }
             },
-            Err(e)  => {
+            Err(_)  => {
                 panic!("FATAL ERROR: [BUG] All control channel senders have closed before normal shutdown was initiated");
             }
         }
