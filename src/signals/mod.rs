@@ -13,7 +13,10 @@ pub fn handle(signal_handler: chan::Receiver<chan_signal::Signal>, tx_control: s
             signal_handler.recv().unwrap();
 
             debug!("Received an INT or TERM signal");
-            tx_control.send(types::Message::Shutdown(String::from("INT or TERM signal received")));
+            match tx_control.send(types::Message::Shutdown(String::from("INT or TERM signal received"))) {
+                Ok(_)  => { }
+                Err(_) => { panic!("FATAL ERROR: [Bug] Control channel was already closed on manual shutdown") }
+            };
         }
     ){
         Ok(h)   => { return Ok(h); },
