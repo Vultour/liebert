@@ -23,16 +23,17 @@ fn get_defaults() -> types::ConfigurationMap{
 
     config.insert(String::from(".plugins"),                             String::from("0"));
 
-    config.insert(String::from("plugin.builtin.cpu.enabled"),           String::from("true"));
+    config.insert(String::from("builtin.cpu.enabled"),           String::from("true"));
+    config.insert(String::from("builtin.cpu.interval"),          String::from("60"));
 
-    config.insert(String::from("plugin.builtin.memory.enabled"),        String::from("true"));
+    config.insert(String::from("builtin.memory.enabled"),        String::from("true"));
 
-    config.insert(String::from("plugin.builtin.hdd.enabled"),           String::from("true"));
-    config.insert(String::from("plugin.builtin.hdd.devices"),           String::from("/dev/sda1"));
-    config.insert(String::from("plugin.builtin.hdd.mountpoints"),       String::from(""));
+    config.insert(String::from("builtin.hdd.enabled"),           String::from("true"));
+    config.insert(String::from("builtin.hdd.devices"),           String::from("/dev/sda1"));
+    config.insert(String::from("builtin.hdd.mountpoints"),       String::from(""));
 
-    config.insert(String::from("plugin.builtin.network.enabled"),       String::from("true"));
-    config.insert(String::from("plugin.builtin.network.interfaces"),    String::from("eth0"));
+    config.insert(String::from("builtin.network.enabled"),       String::from("true"));
+    config.insert(String::from("builtin.network.interfaces"),    String::from("eth0"));
 
     config
 }
