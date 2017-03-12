@@ -4,6 +4,7 @@ extern crate toml;
 extern crate clap;
 extern crate chan_signal;
 extern crate regex;
+extern crate time;
 
 use std::str::FromStr;
 
@@ -105,26 +106,28 @@ fn main(){
                             Err(e)  => error!("There has been an error while trying to stop 'plugins_controller', if there is a previous error related to this module you can probably disregard this message. The error received was: {}", e)
                         }
 
-                        match connector.channel_in.send(types::Message::Shutdown(String::from("Global shutdown"))){
+                        match connector.channel_in.send(agent::connector::Message::Shutdown(String::from("Global shutdown"))){
                             Ok(_)   => {},
                             Err(e)  => error!("There has been an error while trying to stop 'connector', if there is a previous error related to this module you can probably disregard this message. The error received was: {}", e)
                         }
 
                         break;
                     },
+                    types::Message::LogError(m)     => { error!("{}", m); },
+                    types::Message::LogWarn(m)      => { warn!("{}", m); },
                     types::Message::LogInfo(m)      => { info!("{}", m); },
                     types::Message::LogDebug(m)     => { debug!("{}", m); },
-                    types::Message::Format(f)       => {
-                        debug!("Format received on control channel, see below");
-                        for format in f {
+                    types::Message::Format(n, f)    => {
+                        debug!("Format received on control channel for {}, see below", n);
+                        for format in &f {
                             match format {
-                                agent::plugins::Format::Gauge(name, hb, min, max)   => {
+                                &agent::plugins::Format::Gauge(ref name, ref hb, ref min, ref max)   => {
                                     debug!(
                                         "FORMAT: {} - {}s -- min:{} -- max:{}",
                                         name, hb, min.unwrap_or(-1), max.unwrap_or(-1)
                                     );
                                 },
-                                agent::plugins::Format::Counter(name, hb, min, max) => {
+                                &agent::plugins::Format::Counter(ref name, ref hb, ref min, ref max) => {
                                     debug!(
                                         "FORMAT: {} - {}s -- min:{} -- max:{}",
                                         name, hb, min.unwrap_or(-1), max.unwrap_or(-1)
@@ -132,12 +135,14 @@ fn main(){
                                 }
                             }
                         }
+                        connector.channel_in.send(agent::connector::Message::Format(n, f));
                     },
-                    types::Message::Data((id, m))   => {
+                    types::Message::Data(id, t, m)   => {
                         debug!(
-                            "Data received on control channel from plugin '{}': {}",
-                            id, m
+                            "Data received on control channel from plugin '{}' [{}]: {}",
+                            id, t, m
                         );
+                        connector.channel_in.send(agent::connector::Message::Data(id, t, m));
                     }
                 }
             },
