@@ -4,15 +4,19 @@ use std::sync;
 use std::time;
 use std::io::BufReader;
 use std::fs::File;
-use std::str::FromStr;
 use regex::Regex;
+
+use time::get_time;
+
+use std::str::FromStr;
 
 use ::types;
 use ::util;
 
 
-pub fn start_default_cpu(conf: types::complex::Configuration, control_tx: types::MessageSender, id: i32) -> Result<super::PluginTuple, String> {
+pub fn start_builtin_cpu(conf: types::complex::Configuration, control_tx: types::MessageSender) -> Result<super::PluginTuple, String> {
     let (pipe_tx, pipe_rx) = sync::mpsc::channel();
+    let id = "builtin.cpu";
     thread::Builder::new().name(String::from("plugin_default_cpu")).spawn(
         move || {
             let control_tx = control_tx;
@@ -26,6 +30,8 @@ pub fn start_default_cpu(conf: types::complex::Configuration, control_tx: types:
                 error!("There has been an error while starting the CPU collector, it will be disabled");
                 return;
             }
+
+            let cpu_interval = cpu_interval * 1000;
 
             let re = match Regex::new(r"^cpu\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)") {
                 Ok(re)  => re,
@@ -46,6 +52,7 @@ pub fn start_default_cpu(conf: types::complex::Configuration, control_tx: types:
                     &|| { super::is_shutdown(plugin_rx.try_recv()) }
                 ){
                     Ok(_)   => {
+                        debug!("Builtin CPU collector received shutdown command");
                         return;
                     },
                     Err(_)  => { }
@@ -67,8 +74,9 @@ pub fn start_default_cpu(conf: types::complex::Configuration, control_tx: types:
                                 - (jiffies[1] + jiffies[5] + jiffies[6]);
                 let total   = idle + user + system + iowait + other;
 
-                match control_tx.send(types::Message::Data((
-                    id,
+                match control_tx.send(types::Message::Data(
+                    id.into(),
+                    get_time().sec,
                     format!(
                         "{} {} {} {}",
                         (((user as f64) / (total as f64)) * 100.0) as i32,
@@ -76,7 +84,7 @@ pub fn start_default_cpu(conf: types::complex::Configuration, control_tx: types:
                         (((iowait as f64) / (total as f64)) * 100.0) as i32,
                         (((other as f64) / (total as f64)) * 100.0) as i32
                     )
-                ))) {
+                )) {
                     Ok(_)  => { debug!("Sent data to control channel"); }
                     Err(e) => { panic!(format!("FATAL ERROR: [Bug] Couldn't send data on control channel - {}", e.to_string())); }
                 }
@@ -86,18 +94,18 @@ pub fn start_default_cpu(conf: types::complex::Configuration, control_tx: types:
         }
     )
     .map_err(|err| err.to_string())
-    .map(|handle| (pipe_tx, handle))
+    .map(|handle| (id.into(), pipe_tx, handle))
 }
 
 
-fn get_format(pipe: types::MessageSender, interval: u64, id: i32) -> bool {
+fn get_format(pipe: types::MessageSender, interval: u64, id: &str) -> bool {
     let mut fmt = vec![
         super::Format::Gauge(String::from("user"), interval, Some(0), Some(100)),
         super::Format::Gauge(String::from("system"), interval, Some(0), Some(100)),
         super::Format::Gauge(String::from("iowait"), interval, Some(0), Some(100)),
         super::Format::Gauge(String::from("other"), interval, Some(0), Some(100))
     ];
-    pipe.send(types::Message::Format(fmt));
+    pipe.send(types::Message::Format(id.into(), fmt));
 
     true
 }
