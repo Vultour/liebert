@@ -1,3 +1,6 @@
+mod builtin_cpu;
+mod builtin_memory;
+
 use std::thread;
 use std::sync;
 use std::time;
@@ -5,7 +8,13 @@ use std::time;
 use ::types;
 
 
-pub type PluginTuple = (types::MessageSender, thread::JoinHandle)
+pub type PluginTuple = (String, types::MessageSender, thread::JoinHandle<()>);
+
+
+pub enum Format {
+    Gauge(String, u64, Option<i32>, Option<i32>),  // Name, heartbeat, min, max
+    Counter(String, u64, Option<i32>, Option<i32>) // Name, heartbeat, min, max
+}
 
 
 pub struct Controller{
@@ -22,13 +31,18 @@ impl Controller{
                 let control_tx = control_tx;
                 let plugin_rx = pipe_rx;
 
-                start_default_plugins(conf.clone(), pipe_tx.clone());
-                start_extra_plugins(conf.clone(), pipe_tx.clone());
+                let default_plugins = start_default_plugins(conf.clone(), control_tx.clone());
+                start_extra_plugins(conf.clone(), control_tx.clone());
 
                 for message in plugin_rx{
                     match message{
                         types::Message::Shutdown(m) => {
-                            debug!("Plugins thread received a shutdown message: {}", m);
+                            debug!("Plugins thread received a shutdown command: {}", m);
+                            for (name, plugin) in default_plugins {
+                                debug!("Trying to shutdown '{}'", name);
+                                plugin.0.send(types::Message::Shutdown("Global shutdown".into()));
+                                plugin.1.join();
+                            }
                             return;
                         }
                         _                           => { error!("[BUG] Plugins thread received unknown message: {}", message); }
@@ -43,15 +57,23 @@ impl Controller{
 }
 
 
-fn start_default_plugins(c: types::complex::Configuration, data_tx: types::MessageSender) -> types::NamedSenderHashMap{
-    let plugin_channels = types::NamedSenderHashMap::new();
-    
-    
+fn start_default_plugins(c: types::complex::Configuration, control_tx: types::MessageSender) -> types::NamedSenderHashMap{
+    let mut plugin_channels = types::NamedSenderHashMap::new();
+
+    match builtin_cpu::start_builtin_cpu(c.clone(), control_tx.clone()) {
+        Ok(pt) => { plugin_channels.insert(pt.0, (pt.1, pt.2)); },
+        Err(e) => { error!("Couldn't start builtin CPU collector: {}", e); }
+    }
+
+    match builtin_memory::start_builtin_memory(c.clone(), control_tx.clone()) {
+        Ok(pt) => { plugin_channels.insert(pt.0, (pt.1, pt.2)); },
+        Err(e) => { error!("Couldn't start builtin memory collector: {}", e); }
+    }
 
     plugin_channels
 }
 
-fn start_extra_plugins(c: types::complex::Configuration, data_tx: types::MessageSender) -> types::NamedSenderHashMap{
+fn start_extra_plugins(c: types::complex::Configuration, control_tx: types::MessageSender) -> types::NamedSenderHashMap{
     let mut plugin_channels = types::NamedSenderHashMap::new();
 
     plugin_channels
