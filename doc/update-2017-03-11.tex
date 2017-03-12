@@ -1,0 +1,80 @@
+\documentclass[12pt,a4paper,table]{article}
+
+\usepackage[margin=0.5in]{geometry}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+
+
+\begin{document}
+
+    \begin{center}
+        \Huge{Final Year Project}\\
+        \LARGE{Status Update}\\
+        \large{2016/03/11 - Martin Kukura}\\
+    \end{center}
+
+
+    \section{Recent developments}
+        \subsection{Metric collectors}
+            Basic version of CPU \& memory built-in metric collectors has been finished. Complying with the initial requirement of targeting the Linux operating system, these currently utilize Linux OS-specific features and are therefore not cross-platform compatible. A cross-platform version may be added later.
+
+            \paragraph{CPU collector}
+                There are multiple ways of retrieving CPU stats under Linux. Many of them have been considered before implementation of this module, including \textit{mpstat}, \textit{/proc/stat}, \textit{top} or \textit{uptime}. Due to the high-performance nature of this project, an approach using \textit{/proc/stat} has been chosen. Most, if not all, of the other choices required spawning an external process which incurs an unpredictable performance and memory overhead, as well as no guarantee of accurate results. The final solution reads raw CPU stats, or so called \textit{jiffies} \footnote{Jiffies are the amount of time a CPU spent on a task, they typically represent hundreths of a second}, from the system's \textit{/proc/stat} file and calculates the CPU usage accordingly. This, apart from being fast, has the added benefit of being able to calculate the exact CPU usage between any two moments in time.
+
+            \paragraph{Memory collector}
+                The memory collector utilizes standard \textit{/proc/meminfo} file, which contains detailed information about the current memory utilization.
+
+        \subsection{Basic Agent networking}
+            Basic networking has been implemented - the \textit{Agent} instance will now attempt to connect to the specified \textit{Controller} address found in the configuration file. It will also send \textit{FORMAT} and \textit{DATA} messages over the connection, once they are received from a metric collector. A sample output can be found below (captured using \textit{netcat} pretending to be a \textit{Controller} instance):
+\begin{verbatim}
+...
+2017-03-12 00:12:13.67791 [INFO ]: Controller connection established with 127.0.0.1:7777
+FORMAT builtin.memory
+free 5 0 U
+used 5 0 U
+buffers 5 0 U
+cache 5 0 U
+FORMAT_END
+...
+DATA builtin.memory 1489279398 2673216 5382448 556660 2195072
+DATA builtin.cpu 1489279398 2 0 0 0
+\end{verbatim}
+            For now, communication using plaintext strings has been chosen as it is easy to implement. Advanced networking / packet libraries such as \textit{protobuf} are also not available for Rust yet, therefore implementing a custom bit-level protocol would be out of scope of this project.
+
+
+    \section{Notable issues}
+        \subsection{The string dillema}
+            There are 2 types of strings in rust: a heap allocated dynamic \textit{String} and a stack allocated \textit{string slice} or \textit{\&str}. Currently, most of the strings in the application are the dynamic \textit{String} version. Even worse, whenever they are passed around they will usually be cloned, instead of being passed as a \textit{string slice reference}. An attempt has been made to convert some of this redundant \textit{String} cloning into the non-dynamic 0-overhead \textit{string slice} version, unfortunately, at least for now, this attempt has been unsuccessful. The main factor in this failure was the concurrent nature of the application. High percentage of the strings found withing the application originate from within a configuration hashmap-like structure. Due to the structure being shared between many threads, it is being hidden behind a mutex and other Rust specific concurrency tools, rendering the data inaccessible after the initial call site. Being unable to access the original string after the retrieval function without cloning prevents the usage of \textit{string slices} that could refer to the already-existing \textit{String} in the configuration structure.
+
+        \subsection{Persisting data on controller disconnection}
+            One of the requirements described in the \textit{requirements report} was that the \textit{Agent} instance should buffer its collected data in the event of loss of \textit{Controller} connection. Rust's I/O, including all networking, is unfortunately \textit{blocking}, meaning it cannot be easily set up to respond to incoming data using event handling, and any such approach needs to be coded manually from scracth. Due to this, \textit{Agent} spawns 3 threads for its networking functionality: a reader thread to send data over the wire, a writer thread to receive and parse incoming data, and a controlling thread to handle message direction and thread synchronization. Due to this architecture, whenever the remote end disconnects, the reader thread exits immediately. In such event, the writer thread needs to be closed manually, the connection re-established and both I/O threads restarted. To persist the buffered data, a proper concurrent safe structure had to be chosen. This has been determined to be the \textit{Sender / Receiver channel}, widely used for message passing between threads. It has been chosen over a more simple structure such as an array because it can handle a single reader and multiple writers in parallel, without the need for locking. To enable the reader end to be shared between multiple threads (in the event of the writer thread restarting), the following has been done:
+\begin{verbatim}
+type        ConnectorMessageReceiver = sync::mpsc::Receiver<Message>;
+...
+type        ConnectorMutexedReceiver = sync::Arc<sync::Mutex<ConnectorMessageReceiver>>;
+\end{verbatim}
+
+            This allows the reading end of the channel to be shared across threads (unavailable otherwise due to Rust's memory safety guarantees). Whenever a new writer thread gets created, it obtains a mutex lock to the receving end of the channel and can begin processing. Due to the RAII implementation of Rust's mutex locks, when this thread exits (error or manual shutdown), it releases the lock automatically, allowing a newly spawned thread to start receving on the same channel.
+
+        \subsection{Avoiding 100\% CPU usage}
+            The nature of the application suggests that much of the time it will be running will be spent idle. While idle, it should ideally consume the least amount of CPU time possible. Most application idling has been done using a while loop that checks the current time against the desired wait time. Originally, to conserve CPU time, a \textit{thread::yield\_now()} function was called within the loop, which gives up the program's allocated timeslice back to the OS scheduler. As it turns out, this does not prevent 100\% CPU usage, instead it consumes all the CPU time that is available (which means if other processes need 50\% of the CPU, our application would consume the remaining 50\%). To ease the CPU load, the function has been changed to \textit{thread::sleep()}. The current function looks like this:
+\begin{verbatim}
+pub fn wait_exec_result(wait: time::Duration, exec: &Fn() -> bool) -> Result<(), ()>{
+    let start = time::Instant::now();
+
+    while start.elapsed() < wait{
+        if exec(){ return Ok(()); }
+        thread::sleep(time::Duration::from_millis(100));
+    }
+    
+    Err(())
+}
+\end{verbatim}
+        Note that this does more than merely sleep for a specified amount of time (and therefore is needed intead of a simple call to \textit{thread::sleep()}) - it executes a custom function on every loop. This is used to detect when a thread received a shutdown command while sleeping. If this entire waiting function was substituted with a single call to \textit{thread::sleep()} with the desired wait time, the thread would become unresponsive until the sleep expired.
+
+        Different approaches in regards to threading and blocking are planned, however these would require major rewrites of the application and will be only implemented if time permits.
+
+\end{document}
