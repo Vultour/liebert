@@ -27,6 +27,7 @@ fn get_defaults() -> types::ConfigurationMap{
     config.insert(String::from("builtin.cpu.interval"),          String::from("60"));
 
     config.insert(String::from("builtin.memory.enabled"),        String::from("true"));
+    config.insert(String::from("builtin.memory.interval"),       String::from("60"));
 
     config.insert(String::from("builtin.hdd.enabled"),           String::from("true"));
     config.insert(String::from("builtin.hdd.devices"),           String::from("/dev/sda1"));
@@ -82,7 +83,7 @@ pub fn from_file(path: &str, tx_control: sync::mpsc::Sender<types::Message>) -> 
             }
             None => {
                 if !opt.starts_with("."){
-                    tx_control.send(types::Message::LogInfo(format!("Option '{}'  not found in config, using default value '{}'", opt, value)));
+                    tx_control.send(types::Message::LogWarn(format!("Option '{}'  not found in config, using default value '{}'", opt, value)));
                 }
             }
         }
