@@ -31,7 +31,7 @@ impl Watchdog{
                 None    => { break; }
             }
 
-            debug!("Watchdog spawning monitor thread for {}", handle.thread().name().unwrap_or("unknown"));
+            debug!("WATCHDOG: Spawning monitor thread for {}", handle.thread().name().unwrap_or("unknown"));
             match thread::Builder::new()
                 .name(format!("monitor_{}", handle.thread().name().unwrap_or("unknown")))
                 .spawn(
@@ -39,7 +39,7 @@ impl Watchdog{
                         let h: thread::JoinHandle<()> = handle;
                         let tx: sync::mpsc::Sender<types::Message> = local_tx;
                         let thread_name = format!("{}", h.thread().name().unwrap_or("unknown"));
-                        debug!("DEBUG: Watchdog started monitoring thread {}", thread_name);
+                        debug!("WATCHDOG: Started monitoring thread {}", thread_name);
                         match h.join(){
                             Ok(_)   => { debug!("WATCHDOG: Thread {} terminated gracefully", thread_name); }
                             Err(_)  => { tx.send(types::Message::Fatal(format!("WATCHDOG: Thread {} crashed", thread_name))).expect("FATAL ERROR: [BUG] Control channel is closed"); }
@@ -65,7 +65,7 @@ impl Watchdog{
 
 
             let thread_name = format!("{}", handle.thread().name().unwrap_or("unknown"));
-            debug!("Watchdog waiting for shutdown of {}", thread_name);
+            debug!("WATCHDOG: Waiting for shutdown of {}", thread_name);
 
             match handle.join(){
                 Ok(_)   => {  }
