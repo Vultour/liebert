@@ -15,11 +15,11 @@ regex = "0.2.1"
 
 [[bin]]
 name = "liebert-agent"
-path = "src/agent-main.rs"
+path = "src/liebert-agent.rs"
 
 [[bin]]
 name = "liebert-controller"
-path = "src/controller-main.rs"
+path = "src/liebert-controller.rs"
 
 [[bin]]
 name = "liebert-chkconf"
