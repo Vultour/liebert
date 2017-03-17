@@ -1,6 +1,7 @@
+extern crate log;
 extern crate env_logger;
 extern crate time;
-extern crate log;
+
 
 pub fn init(log_level: log::LogLevelFilter){
     env_logger::LogBuilder::new()
@@ -9,7 +10,8 @@ pub fn init(log_level: log::LogLevelFilter){
                 format!(
                     "{}.{} [{:<5}]: {}",
                     time::strftime("%Y-%m-%d %H:%I:%S", &time::now()).unwrap(),
-                    time::now().tm_nsec.to_string().chars().take(5).collect::<String>(), // Maybe there's a nicer way?
+                    &time::now().tm_nsec.to_string()[0..5],
+                    //time::now().tm_nsec.to_string().chars().take(5).collect::<String>(), // Maybe there's a nicer way?
                     r.level(),
                     r.args())
 

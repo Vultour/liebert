@@ -8,23 +8,20 @@ use super::types;
 pub struct Watchdog{
     mon_handles:    Vec<thread::JoinHandle<()>>,
     spawned:        Vec<thread::JoinHandle<()>>,
-    channel_out:    sync::mpsc::Sender<types::Message>
 }
 
 
 impl Watchdog{
-    pub fn new(tx: sync::mpsc::Sender<types::Message>) -> Watchdog{
+    pub fn new() -> Watchdog{
         Watchdog{
             mon_handles:    Vec::new(),
             spawned:        Vec::new(),
-            channel_out:    tx
         }
     }
 
     pub fn monitor(&mut self) -> Result<(), io::Error>{
         loop{
             let handle: thread::JoinHandle<()>;
-            let local_tx = self.channel_out.clone();
 
             match self.mon_handles.pop(){
                 Some(h) => { handle = h; }
@@ -37,12 +34,11 @@ impl Watchdog{
                 .spawn(
                     || {
                         let h: thread::JoinHandle<()> = handle;
-                        let tx: sync::mpsc::Sender<types::Message> = local_tx;
                         let thread_name = format!("{}", h.thread().name().unwrap_or("unknown"));
                         debug!("WATCHDOG: Started monitoring thread {}", thread_name);
                         match h.join(){
                             Ok(_)   => { debug!("WATCHDOG: Thread {} terminated gracefully", thread_name); }
-                            Err(_)  => { tx.send(types::Message::Fatal(format!("WATCHDOG: Thread {} crashed", thread_name))).expect("FATAL ERROR: [BUG] Control channel is closed"); }
+                            Err(_)  => { error!("WATCHDOG: Thread {} crashed", thread_name); }
                         }
                     }
             ){
