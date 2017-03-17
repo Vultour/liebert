@@ -7,19 +7,21 @@ use std::sync;
 use types;
 
 
-pub fn handle(signal_handler: chan::Receiver<chan_signal::Signal>, tx_control: sync::mpsc::Sender<types::Message>) -> Result<thread::JoinHandle<()>, String>{
+pub fn handle<T: 'static>(signal_handler: chan::Receiver<chan_signal::Signal>, exec: T) where T: FnOnce() + Send {
     match thread::Builder::new().name(String::from("signal_handler")).spawn(
         move || {
             signal_handler.recv().unwrap();
 
             debug!("Received an INT or TERM signal");
-            match tx_control.send(types::Message::Shutdown(String::from("INT or TERM signal received"))) {
-                Ok(_)  => { }
-                Err(_) => { panic!("FATAL ERROR: [Bug] Control channel was already closed on manual shutdown") }
-            };
+            exec();
+
+            //match tx_control.send(types::Message::Shutdown(String::from("INT or TERM signal //received"))) {
+            //    Ok(_)  => { }
+            //    Err(_) => { panic!("FATAL ERROR: [Bug] Control channel was already closed on manual shutdown") }
+            //};
         }
     ){
-        Ok(h)   => { return Ok(h); },
-        Err(e)  => { return Err(format!("FATAL ERROR: Couldn't spawn a thread for signal handler - {}", e)); }
+        Err(e)  => { error!("FATAL ERROR: Couldn't spawn a thread for signal handler - {}", e); },
+        _       => { }
     }
 }
