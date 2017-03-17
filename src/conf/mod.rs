@@ -9,6 +9,7 @@ use ::types;
 
 mod defaults;
 pub mod agent;
+pub mod controller;
 //pub mod controller;
 
 
@@ -52,7 +53,7 @@ fn load_file(path: &str) -> Result<String, String>{
     Ok(s)
 }
 
-pub fn check_conf(toml: &toml::Value, tx_control: sync::mpsc::Sender<types::Message>) -> types::ConfigurationMap{
+pub fn check_conf(toml: &toml::Value) -> types::ConfigurationMap{
     let mut conf = get_defaults();
 
     for (opt, value) in conf.iter_mut(){
@@ -62,7 +63,7 @@ pub fn check_conf(toml: &toml::Value, tx_control: sync::mpsc::Sender<types::Mess
             }
             None => {
                 if !opt.starts_with("."){
-                    tx_control.send(types::Message::LogInfo(format!("Option '{}'  not found in config, using default value '{}'", opt, value)));
+                    info!("Option '{}'  not found in config, using default value '{}'", opt, value);
                 }
             }
         }
