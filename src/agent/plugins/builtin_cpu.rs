@@ -14,7 +14,7 @@ use ::types;
 use ::util;
 
 
-pub fn start_builtin_cpu(conf: types::complex::Configuration, control_tx: types::MessageSender) -> Result<super::PluginTuple, String> {
+pub fn start_builtin_cpu(conf: types::Configuration, control_tx: ::agent::MessageSender) -> Result<super::NamedPluginTuple, String> {
     let (pipe_tx, pipe_rx) = sync::mpsc::channel();
     let id = "builtin.cpu";
     thread::Builder::new().name(String::from("plugin_default_cpu")).spawn(
@@ -74,7 +74,7 @@ pub fn start_builtin_cpu(conf: types::complex::Configuration, control_tx: types:
                                 - (jiffies[1] + jiffies[5] + jiffies[6]);
                 let total   = idle + user + system + iowait + other;
 
-                match control_tx.send(types::Message::Data(
+                match control_tx.send(::agent::Message::Data(
                     id.into(),
                     get_time().sec,
                     format!(
@@ -98,14 +98,14 @@ pub fn start_builtin_cpu(conf: types::complex::Configuration, control_tx: types:
 }
 
 
-fn get_format(pipe: types::MessageSender, interval: u64, id: &str) -> bool {
+fn get_format(pipe: ::agent::MessageSender, interval: u64, id: &str) -> bool {
     let mut fmt = vec![
         super::Format::Gauge(String::from("user"), interval, Some(0), Some(100)),
         super::Format::Gauge(String::from("system"), interval, Some(0), Some(100)),
         super::Format::Gauge(String::from("iowait"), interval, Some(0), Some(100)),
         super::Format::Gauge(String::from("other"), interval, Some(0), Some(100))
     ];
-    pipe.send(types::Message::Format(id.into(), fmt));
+    pipe.send(::agent::Message::Format(id.into(), fmt));
 
     true
 }

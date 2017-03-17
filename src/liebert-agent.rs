@@ -23,7 +23,7 @@ mod signals;
 
 fn main(){
     let args: types::ConfigurationMap;
-    let conf: types::complex::Configuration;
+    let conf: types::Configuration;
 
     // Create a control channel
     let (tx_control, rx_control) = sync::mpsc::channel();
@@ -35,10 +35,10 @@ fn main(){
     }
 
     // Parse configuration file
-    match conf::agent::from_file(args.get(".args.config").expect("FATAL ERROR: [BUG] Missing configuration file location"), tx_control.clone()){
+    match conf::agent::from_file(args.get(".args.config").expect("FATAL ERROR: [BUG] Missing configuration file location")){
         Ok(mut c)   => {
             c.extend(args);
-            conf = types::complex::Configuration::new(sync::Arc::new(sync::Mutex::new(c)));
+            conf = types::Configuration::new(sync::Arc::new(sync::Mutex::new(c)));
         }
         Err(e)  => { panic!(e); }
     }
@@ -59,15 +59,15 @@ fn main(){
     debug!("Loaded configuration: {:#?}", conf);
 
     // Start the signal handler
-    match signals::handle(
+    let signal_tx_control = tx_control.clone();
+    signals::handle(
         chan_signal::notify(&[chan_signal::Signal::INT, chan_signal::Signal::TERM]),
-        tx_control.clone()
-    ){
-        Ok(h)   => h,
-        Err(e)  => panic!(e)
-    };
+        move || {
+            signal_tx_control.send(agent::Message::Shutdown("Interrupt signal".into()));
+        }
+    );
 
-    let mut watchdog = watchdog::Watchdog::new(tx_control.clone());
+    let mut watchdog = watchdog::Watchdog::new();
 
     // Start controller connector
     let connector = match agent::connector::Connector::new(conf.clone(), tx_control.clone()){
@@ -93,15 +93,15 @@ fn main(){
         match rx_control.recv(){
             Ok(msg)   => {
                 match msg{
-                    types::Message::Fatal(m)        => {
+                    agent::Message::Fatal(m)        => {
                         error!("Control channel received a message indicating an unrecoverable error: {}", m);
                         panic!("Fatal error on control channel, see relevant log message");
                     },
-                    types::Message::Shutdown(m)     => {
+                    agent::Message::Shutdown(m)     => {
                         info!("Received shutdown message on control channel - {}", m);
                         info!("Initiating shutdown");
 
-                        match plugins_controller.channel_in.send(types::Message::Shutdown(String::from("Global shutdown"))){
+                        match plugins_controller.channel_in.send(agent::Message::Shutdown(String::from("Global shutdown"))){
                             Ok(_)   => {},
                             Err(e)  => error!("There has been an error while trying to stop 'plugins_controller', if there is a previous error related to this module you can probably disregard this message. The error received was: {}", e)
                         }
@@ -113,11 +113,11 @@ fn main(){
 
                         break;
                     },
-                    types::Message::LogError(m)     => { error!("{}", m); },
-                    types::Message::LogWarn(m)      => { warn!("{}", m); },
-                    types::Message::LogInfo(m)      => { info!("{}", m); },
-                    types::Message::LogDebug(m)     => { debug!("{}", m); },
-                    types::Message::Format(n, f)    => {
+                    agent::Message::LogError(m)     => { error!("{}", m); },
+                    agent::Message::LogWarn(m)      => { warn!("{}", m); },
+                    agent::Message::LogInfo(m)      => { info!("{}", m); },
+                    agent::Message::LogDebug(m)     => { debug!("{}", m); },
+                    agent::Message::Format(n, f)    => {
                         debug!("Format received on control channel for {}, see below", n);
                         for format in &f {
                             match format {
@@ -137,7 +137,7 @@ fn main(){
                         }
                         connector.channel_in.send(agent::connector::Message::Format(n, f));
                     },
-                    types::Message::Data(id, t, m)   => {
+                    agent::Message::Data(id, t, m)   => {
                         debug!(
                             "Data received on control channel from plugin '{}' [{}]: {}",
                             id, t, m

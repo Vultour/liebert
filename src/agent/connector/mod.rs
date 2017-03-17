@@ -35,7 +35,7 @@ pub struct Connector {
 
 
 impl Connector {
-    pub fn new(conf: types::complex::Configuration, tx: types::MessageSender) -> Result<Connector, String> {
+    pub fn new(conf: types::Configuration, tx: super::MessageSender) -> Result<Connector, String> {
         let (pipe_tx, pipe_rx) = sync::mpsc::channel::<Message>();
         let pipe_tx_clone = pipe_tx.clone();
         match thread::Builder::new().name(String::from("connector")).spawn(
@@ -63,7 +63,7 @@ impl Connector {
 
                             if (retries >= max_retries) && (max_retries > 0){
                                 error!("[connector] Controller connection could not be established in configured number of retries, shutting down");
-                                control_tx.send(types::Message::Shutdown(format!("[connector] Couldn't establish a connection to controller, giving up after {} retries", retries))).expect("FATAL ERROR: [BUG] Control channel hung up");
+                                control_tx.send(super::Message::Shutdown(format!("[connector] Couldn't establish a connection to controller, giving up after {} retries", retries))).expect("FATAL ERROR: [BUG] Control channel hung up");
                                 return;
                             }
                         }

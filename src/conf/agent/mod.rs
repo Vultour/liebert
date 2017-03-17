@@ -6,8 +6,7 @@ use std::fs;
 use std::sync;
 
 use ::types;
-
-mod defaults;
+use super::defaults;
 
 
 pub type ConfigResult = Result<types::ConfigurationMap, String>;
@@ -57,7 +56,7 @@ fn load_file(path: &str) -> Result<String, String>{
     Ok(s)
 }
 
-pub fn from_file(path: &str, tx_control: sync::mpsc::Sender<types::Message>) -> ConfigResult{
+pub fn from_file(path: &str) -> ConfigResult{
     let file: toml::Value;
 
     match super::load_file(path){
@@ -72,7 +71,7 @@ pub fn from_file(path: &str, tx_control: sync::mpsc::Sender<types::Message>) -> 
         Err(e)          => { return Err(e); }
     }
 
-    let mut global_conf = super::check_conf(&file, tx_control.clone());
+    let mut global_conf = super::check_conf(&file);
 
     let mut conf = get_defaults();
 
@@ -83,7 +82,7 @@ pub fn from_file(path: &str, tx_control: sync::mpsc::Sender<types::Message>) -> 
             }
             None => {
                 if !opt.starts_with("."){
-                    tx_control.send(types::Message::LogWarn(format!("Option '{}'  not found in config, using default value '{}'", opt, value)));
+                    println!("<init>: Option '{}'  not found in config, using default value '{}'", opt, value);
                 }
             }
         }
@@ -101,7 +100,7 @@ pub fn from_file(path: &str, tx_control: sync::mpsc::Sender<types::Message>) -> 
 
                         match plugin.lookup("enabled"){
                             Some(en)   => { enabled = en.as_bool().expect("FATAL ERROR: Plugin attribute 'enabled' must be a boolean!"); }
-                            None       => { warn!("Found a plugin declaration without an 'enabled' attribute, it will be '{}' by default.", enabled); }
+                            None       => { println!("<init>: Found a plugin declaration without an 'enabled' attribute, it will be '{}' by default.", enabled); }
                         }
 
                         match plugin.lookup("name"){
@@ -114,12 +113,12 @@ pub fn from_file(path: &str, tx_control: sync::mpsc::Sender<types::Message>) -> 
                             None    => { }
                         }
 
-                        if name == "" { warn!("Found plugin declaration without a 'path' attribute, this plugin will be ignored."); }
-                        if path == "" { warn!("Found plugin declaration without a 'name' attribute, this plugin will be ignored."); }
+                        if name == "" { println!("<init>: Found plugin declaration without a 'path' attribute, this plugin will be ignored."); }
+                        if path == "" { println!("<init>: Found plugin declaration without a 'name' attribute, this plugin will be ignored."); }
 
                         if (name != "") && (path != ""){
                             plugins += 1;
-                            if enabled { info!("Plugin '{}' is enabled. [{}]", name, path); }
+                            if enabled { println!("<init>: Plugin '{}' is enabled. [{}]", name, path); }
                             conf.insert(String::from(format!(".plugin.{}.enabled", plugins)),   String::from(format!("{}", enabled)));
                             conf.insert(String::from(format!(".plugin.{}.name", plugins)),      name);
                             conf.insert(String::from(format!(".plugin.{}.path", plugins)),      path);
@@ -127,10 +126,10 @@ pub fn from_file(path: &str, tx_control: sync::mpsc::Sender<types::Message>) -> 
 
                     }
                 }
-                None => { warn!("Found invalid plugin directive in config. {}", a); }
+                None => { println!("<init>: Found invalid plugin directive in config. {}", a); }
             }
         }
-        None => { info!("No plugins found"); }
+        None => { println!("<init>: No plugins found"); }
     }
 
     conf.insert(String::from(".plugins"), format!("{}", plugins));

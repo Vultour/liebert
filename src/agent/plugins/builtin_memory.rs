@@ -14,7 +14,7 @@ use ::types;
 use ::util;
 
 
-pub fn start_builtin_memory(conf: types::complex::Configuration, control_tx: types::MessageSender) -> Result<super::PluginTuple, String> {
+pub fn start_builtin_memory(conf: types::Configuration, control_tx: ::agent::MessageSender) -> Result<super::NamedPluginTuple, String> {
     let (pipe_tx, pipe_rx) = sync::mpsc::channel();
     let id = "builtin.memory";
     thread::Builder::new().name(String::from("plugin_default_memory")).spawn(
@@ -59,7 +59,7 @@ pub fn start_builtin_memory(conf: types::complex::Configuration, control_tx: typ
                 };
                 let used = total - free;
 
-                match control_tx.send(types::Message::Data(
+                match control_tx.send(::agent::Message::Data(
                     id.into(),
                     get_time().sec,
                     format!(
@@ -81,14 +81,14 @@ pub fn start_builtin_memory(conf: types::complex::Configuration, control_tx: typ
 }
 
 
-fn get_format(pipe: types::MessageSender, interval: u64, id: &str) -> bool {
+fn get_format(pipe: ::agent::MessageSender, interval: u64, id: &str) -> bool {
     let mut fmt = vec![
         super::Format::Gauge(String::from("free"),    interval, Some(0), None),
         super::Format::Gauge(String::from("used"),    interval, Some(0), None),
         super::Format::Gauge(String::from("buffers"), interval, Some(0), None),
         super::Format::Gauge(String::from("cache"),   interval, Some(0), None)
     ];
-    pipe.send(types::Message::Format(id.into(), fmt));
+    pipe.send(::agent::Message::Format(id.into(), fmt));
 
     true
 }
