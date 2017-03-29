@@ -1,5 +1,13 @@
 #!/bin/bash
-set -e
+#set -e
+
+function compile {
+    for file in ./*.tex; do pdflatex -halt-on-error $file; done
+}
+
+function bib {
+    for file in ./*.aux; do bibtex $file; done
+}
 
 DIR=$(dirname $0);
 
@@ -14,10 +22,10 @@ rm -f *.out
 rm -f *.toc
 rm -f *.pdf
 
-pdflatex -halt-on-error *.tex
-bibtex *.aux
-pdflatex -halt-on-error *.tex
-pdflatex -halt-on-error *.tex
+compile
+bib
+compile
+compile
 
 mv -t dist/ *.pdf
 
