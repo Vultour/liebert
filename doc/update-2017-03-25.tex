@@ -1,0 +1,52 @@
+\documentclass[12pt,a4paper,table]{article}
+
+\usepackage[margin=0.5in]{geometry}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+
+
+\begin{document}
+
+    \begin{center}
+        \Huge{Final Year Project}\\
+        \LARGE{Status Update}\\
+        \large{2016/03/25 - Martin Kukura}\\
+    \end{center}
+
+
+    \section{Recent developments}
+        \subsection{Controller}
+            Initial version of the \textit{Controller} application has been developed. This is the other half of the \textit{Agent - Controller} combo, and is responsible for connecting with, and receving data from, running \textit{Agent} instances, and persisting data into storage.
+
+            The present version does not currently implement any storage backends, however it does accept incoming \textit{Agent} connections and successfuly parses messages received over the network. Implementing an \textit{RRD} storage backend is now the last feature missing before mostly all \textit{essential} requirements are met, and before the system is ready to start performing the core tasks that it has been built for.
+
+    \section{Notable issues}
+        \subsection{Optimizing project structure}
+            Recently, decent amount of time has been spent on optimizing the file structure of the project, and refactoring the code to reflect the changes introduced. Originally, most of the code has been built with the idea that it will be shared between both the \textit{Agent} and the \textit{Controller} application. With the introduction of the \textit{Controller} application, it has however been discovered that many of these shared structures and functions need to slightly differ between the applications, and therefore both cannot utilize the same underlying code. The problematic portions have been refactored into separate \textit{Rust modules} for each binary, reducing unnecessary bloat compiled into each application.
+
+            To illustrate the problem, let's take a look at a core structure called \textit{Message}. \textit{Messages} are used extensively throughout both applications to communicate between threads, of which (due to no asynchronous I/O available in \textit{Rust}) there are plenty. The original \textit{Message} used in \textit{Agent} looks like the following:
+\begin{verbatim}
+pub enum Message{
+    Data(String, i64, String),
+    Format(String, Vec<::types::MetricFormat>),
+    Shutdown(String),
+    Fatal(String)
+}
+\end{verbatim}
+            While implementing the \textit{Controller}, it has been found that this enum is not suitable, and therefore was changed:
+\begin{verbatim}
+pub enum Message {
+    Data(String, String, u32, Vec<i64>),
+    Format(String, String, Vec<::types::MetricFormat>),
+    Shutdown(String)
+}
+\end{verbatim}
+            Note that both enums are incredibly similar, however to accomodate the internal working of the controller, a different signature was required for some of the options. Additionally, the \textit{Agent} utilizes one more option, which, due to \textit{Rust's} exhaustive pattern matching requirements, would require the \textit{Controller} code to check for its possibility in every operation involving the \textit{Message} enum.
+
+            Wherever possible, code has been refactored to suit both applications and is accesible from a shared module. Additionally some functions previously created for \textit{Agent} were changed to allow them to be shared with the \textit{Controller}, such as the signal handler responsible for detecting \textit{SIGTERM} and \textit{SIGINT} signals. Previously it contained hardcoded behaviour upon detection, where as now it accepts a closure, allowing each application to provide custom handling logic.
+
+
+\end{document}
