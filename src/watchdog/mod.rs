@@ -30,7 +30,7 @@ impl Watchdog{
 
             debug!("WATCHDOG: Spawning monitor thread for {}", handle.thread().name().unwrap_or("unknown"));
             match thread::Builder::new()
-                .name(format!("monitor_{}", handle.thread().name().unwrap_or("unknown")))
+                .name(format!("mon_{}", handle.thread().name().unwrap_or("unknown")))
                 .spawn(
                     || {
                         let h: thread::JoinHandle<()> = handle;

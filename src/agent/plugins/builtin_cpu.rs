@@ -17,7 +17,7 @@ use ::util;
 pub fn start_builtin_cpu(conf: types::Configuration, control_tx: ::agent::MessageSender) -> Result<super::NamedPluginTuple, String> {
     let (pipe_tx, pipe_rx) = sync::mpsc::channel();
     let id = "builtin.cpu";
-    thread::Builder::new().name(String::from("plugin_default_cpu")).spawn(
+    thread::Builder::new().name(String::from("plg_bi-cpu")).spawn(
         move || {
             let control_tx = control_tx;
             let plugin_rx  = pipe_rx;

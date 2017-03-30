@@ -8,7 +8,7 @@ use types;
 
 
 pub fn handle<T: 'static>(signal_handler: chan::Receiver<chan_signal::Signal>, exec: T) where T: FnOnce() + Send {
-    match thread::Builder::new().name(String::from("signal_handler")).spawn(
+    match thread::Builder::new().name(String::from("signal-handler")).spawn(
         move || {
             signal_handler.recv().unwrap();
 

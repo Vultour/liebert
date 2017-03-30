@@ -136,7 +136,7 @@ impl Connector {
 
 fn start_reader(stream: net::TcpStream, connector_pipe: ConnectorMessageSender) -> ConnectorThreadTuple {
     let (pipe_tx, pipe_rx) = sync::mpsc::channel();
-    match thread::Builder::new().name("connector_reader".into()).spawn(
+    match thread::Builder::new().name("con-reader".into()).spawn(
         move || {
             let mut reader = BufReader::new(stream);
             let pipe = pipe_rx;
@@ -165,7 +165,7 @@ fn start_reader(stream: net::TcpStream, connector_pipe: ConnectorMessageSender) 
 }
 
 fn start_writer(stream: net::TcpStream, data_queue: ConnectorMutexedReceiver, connector_pipe: ConnectorMessageSender) -> thread::JoinHandle<()> {
-    match thread::Builder::new().name("connector_writer".into()).spawn(
+    match thread::Builder::new().name("con-writer".into()).spawn(
         move || {
             let mut writer = BufWriter::new(stream);
             let data_queue = match data_queue.lock() {
