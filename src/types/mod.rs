@@ -4,9 +4,11 @@ use std::collections::HashMap;
 
 
 mod complex;
+mod format;
 
 
 pub use self::complex::Configuration;
+pub use self::format::MetricFormat;
 
 
 pub type ConfigurationMap       = HashMap<String, String>;

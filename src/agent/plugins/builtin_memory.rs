@@ -22,7 +22,7 @@ pub fn start_builtin_memory(conf: types::Configuration, control_tx: ::agent::Mes
             let control_tx = control_tx;
             let plugin_rx  = pipe_rx;
 
-            let memory_interval = u64::from_str(
+            let memory_interval = u32::from_str(
                 &conf.get_unsafe("builtin.memory.interval")
             ).expect("FATAL ERROR: Couldn't convert 'builtin.memory.interval' to an integer'");
 
@@ -40,7 +40,7 @@ pub fn start_builtin_memory(conf: types::Configuration, control_tx: ::agent::Mes
 
             loop {
                 match util::wait_exec_result(
-                    time::Duration::from_millis(memory_interval),
+                    time::Duration::from_millis(memory_interval.into()),
                     &|| { super::is_shutdown(plugin_rx.try_recv()) }
                 ){
                     Ok(_)   => {
@@ -81,12 +81,12 @@ pub fn start_builtin_memory(conf: types::Configuration, control_tx: ::agent::Mes
 }
 
 
-fn get_format(pipe: ::agent::MessageSender, interval: u64, id: &str) -> bool {
+fn get_format(pipe: ::agent::MessageSender, interval: u32, id: &str) -> bool {
     let mut fmt = vec![
-        super::Format::Gauge(String::from("free"),    interval, Some(0), None),
-        super::Format::Gauge(String::from("used"),    interval, Some(0), None),
-        super::Format::Gauge(String::from("buffers"), interval, Some(0), None),
-        super::Format::Gauge(String::from("cache"),   interval, Some(0), None)
+        ::types::MetricFormat::Gauge(String::from("free"),    interval, Some(0), None),
+        ::types::MetricFormat::Gauge(String::from("used"),    interval, Some(0), None),
+        ::types::MetricFormat::Gauge(String::from("buffers"), interval, Some(0), None),
+        ::types::MetricFormat::Gauge(String::from("cache"),   interval, Some(0), None)
     ];
     pipe.send(::agent::Message::Format(id.into(), fmt));
 

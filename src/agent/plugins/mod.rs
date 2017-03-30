@@ -7,17 +7,12 @@ use std::time;
 use std::collections::HashMap;
 
 use ::types;
+use ::util;
 
 
 pub type NamedPluginTuple   = (String, super::MessageSender, thread::JoinHandle<()>);
 pub type PluginTuple        = (super::MessageSender, thread::JoinHandle<()>);
 pub type NamedSenderHashMap = HashMap<String, PluginTuple>;
-
-
-pub enum Format {
-    Gauge(String, u64, Option<i32>, Option<i32>),  // Name, heartbeat, min, max
-    Counter(String, u64, Option<i32>, Option<i32>) // Name, heartbeat, min, max
-}
 
 
 pub struct Controller{

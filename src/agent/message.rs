@@ -5,7 +5,7 @@ use std::sync;
 
 pub enum Message{
     Data(String, i64, String),
-    Format(String, Vec<::agent::plugins::Format>),
+    Format(String, Vec<::types::MetricFormat>),
     Shutdown(String),
 
     Fatal(String),

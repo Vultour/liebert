@@ -22,7 +22,7 @@ pub fn start_builtin_cpu(conf: types::Configuration, control_tx: ::agent::Messag
             let control_tx = control_tx;
             let plugin_rx  = pipe_rx;
 
-            let cpu_interval = u64::from_str(
+            let cpu_interval = u32::from_str(
                 &conf.get_unsafe("builtin.cpu.interval")
             ).expect("FATAL ERROR: Couldn't convert 'plugins.builtin.cpu.interval' to an integer'");
 
@@ -48,7 +48,7 @@ pub fn start_builtin_cpu(conf: types::Configuration, control_tx: ::agent::Messag
 
             loop {
                 match util::wait_exec_result(
-                    time::Duration::from_millis(cpu_interval),
+                    time::Duration::from_millis(cpu_interval.into()),
                     &|| { super::is_shutdown(plugin_rx.try_recv()) }
                 ){
                     Ok(_)   => {
@@ -98,12 +98,12 @@ pub fn start_builtin_cpu(conf: types::Configuration, control_tx: ::agent::Messag
 }
 
 
-fn get_format(pipe: ::agent::MessageSender, interval: u64, id: &str) -> bool {
+fn get_format(pipe: ::agent::MessageSender, interval: u32, id: &str) -> bool {
     let mut fmt = vec![
-        super::Format::Gauge(String::from("user"), interval, Some(0), Some(100)),
-        super::Format::Gauge(String::from("system"), interval, Some(0), Some(100)),
-        super::Format::Gauge(String::from("iowait"), interval, Some(0), Some(100)),
-        super::Format::Gauge(String::from("other"), interval, Some(0), Some(100))
+        ::types::MetricFormat::Gauge(String::from("user"), interval, Some(0), Some(100)),
+        ::types::MetricFormat::Gauge(String::from("system"), interval, Some(0), Some(100)),
+        ::types::MetricFormat::Gauge(String::from("iowait"), interval, Some(0), Some(100)),
+        ::types::MetricFormat::Gauge(String::from("other"), interval, Some(0), Some(100))
     ];
     pipe.send(::agent::Message::Format(id.into(), fmt));
 

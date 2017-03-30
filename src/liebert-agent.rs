@@ -121,13 +121,13 @@ fn main(){
                         debug!("Format received on control channel for {}, see below", n);
                         for format in &f {
                             match format {
-                                &agent::plugins::Format::Gauge(ref name, ref hb, ref min, ref max)   => {
+                                &::types::MetricFormat::Gauge(ref name, ref hb, ref min, ref max)   => {
                                     debug!(
                                         "FORMAT: {} - {}s -- min:{} -- max:{}",
                                         name, hb, min.unwrap_or(-1), max.unwrap_or(-1)
                                     );
                                 },
-                                &agent::plugins::Format::Counter(ref name, ref hb, ref min, ref max) => {
+                                &::types::MetricFormat::Counter(ref name, ref hb, ref min, ref max) => {
                                     debug!(
                                         "FORMAT: {} - {}s -- min:{} -- max:{}",
                                         name, hb, min.unwrap_or(-1), max.unwrap_or(-1)

@@ -22,7 +22,7 @@ type        ConnectorMutexedReceiver = sync::Arc<sync::Mutex<ConnectorMessageRec
 
 pub enum Message {
     Data(String, i64, String),
-    Format(String, Vec<super::plugins::Format>),
+    Format(String, Vec<::types::MetricFormat>),
     Shutdown(String),
     Placeholder
 }
@@ -187,19 +187,22 @@ fn start_writer(stream: net::TcpStream, data_queue: ConnectorMutexedReceiver, co
                             Message::Format(n, f) => {
                                 let mut format_string = String::from(format!("FORMAT {}", n));
                                 for format in f {
+                                    let format_id = format.to_id();
                                     match format{
-                                        super::plugins::Format::Gauge(name, hb, min, max) => {
+                                        ::types::MetricFormat::Gauge(name, hb, min, max) => {
                                             format_string += &format!(
-                                                "\n{} {} {} {}",
+                                                "\n{} {} {} {} {}",
+                                                format_id,
                                                 name,
                                                 hb,
                                                 rrd_unwrap(min),
                                                 rrd_unwrap(max)
                                             );
                                         },
-                                        super::plugins::Format::Counter(name, hb, min, max) => {
+                                        ::types::MetricFormat::Counter(name, hb, min, max) => {
                                             format_string += &format!(
-                                                "\n{} {} {} {}",
+                                                "\n{} {} {} {} {}",
+                                                format_id,
                                                 name,
                                                 hb,
                                                 rrd_unwrap(min),
