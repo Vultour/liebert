@@ -129,3 +129,14 @@ fn get_current_meminfo(re_total: &Regex, re_free: &Regex, re_buffers: &Regex, re
 
     Some((total, free, buffers, cache))
 }
+
+
+#[test]
+fn t_get_current_meminfo() {
+    // STUB
+}
+
+#[tst]
+fn t_format {
+    // STUB
+}

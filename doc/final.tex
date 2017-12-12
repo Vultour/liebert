@@ -1,0 +1,82 @@
+\documentclass[12pt,a4paper,table]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{pgfgantt}
+\usepackage{natbib}
+\usepackage{multirow}
+\usepackage{pdflscape}
+\usepackage{longtable}
+
+\renewcommand{\baselinestretch}{1.5}
+\def\subsubsectionautorefname{subsection}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\graphicspath{{img/}}
+
+
+\begin{document}
+
+
+    \begin{titlepage}
+        \vspace*{1.5cm}
+        \begin{center}
+            \Huge{\textsc{Liebert} server monitoring platform}\\
+            \Large{Martin Kukura}\\
+        \end{center}
+        \vspace*{\fill}
+        \begin{center}
+            \Large{Supervisor: Girish Lukka}\\
+            \Large{Date: 3rd May 2017}\\
+            \Large{Department: Computer Science}\\
+            \Large{Key words: performance, monitoring, rust}\\
+        \end{center}
+        \vspace*{\fill}
+        \center{\large{This report is submitted in partial fulfilment of the requirements for the BEng(Hons) Software Engineering degree at the University of Westminster.}}
+    \end{titlepage}
+    \pagebreak
+
+    \tableofcontents
+    \listoffigures
+
+    \pagebreak
+
+
+    \section{Introduction}
+        \subsection{Definition of the problem}
+            With the evolution of computer systems in the recent years, the cost of processing power has been dropping rapidly. This allows everyone from big corporations to ordinary people to possess vast computing resources, be it in the form of a regular computer, Raspberry Pi or a virtual server instance running in the cloud provided by the likes of \textit{Amazon}. Most companies, as well as many tech savvy consumers utilize these resources to run long-lived continuous tasks such as video encoding or data processing. Without proper monitoring tools, large amounts of computing resources can be wasted, as many instances are provisioned with needlessly large amounts of CPU and RAM due to their relatively low cost. Looking at the bigger picture however, under-utilizing, especially cloud resources, becomes a costly nightmare when the operation being supported scales unexpectedly. On the other hand, many instances are over-utilized and would be able to complete their tasks more efficiently if they were properly dimensioned.
+
+            Server monitoring tools evolved from the need to track system performance. They not only allow system administrators to detect over and under-utilized systems, but also monitor system health. Properly setup advanced monitoring system will not only raise an alert when an issue has arised, but also warn of any impending issues (e.g. disk space running out). There are many monitoring systems out there used to fulfil different requirements. From large complex all-in-one solutions such as \textit{Nagios}, through easy to setup tools like \textit{Munin}, to ones that are focused on performance akin to \textit{collectd}.
+
+            \textbf{LIEBERT}'s main goal will be to end up in the last category. There is a vast array of system monitoring tools, however very few of them focus on performance and memory footprint and instead sacrifice these parameters in favour of more features, many of which are, more often than not, unused. \textbf{LIEBERT} will be written from the ground up to offer superior performance and avoid hogging up the system, and will instead sacrifice features if required.
+
+
+        \subsection{Aims and Objectives}
+            Something goes here.
+
+
+        \subsection{Scope of the project}
+            \textbf{LIEBERT} will be pretty limited in scope, however it will make up for that fact by going more in-depth in its core features. The minimal basic version will deliver a highly performant monitoring solution with minimal resource usage. There will be two parts (applications), one will be the endpoint metric gatherer that will reside on each monitored node, the other one will be a \textit{controller} to which all the endpoint applications will send their data over the network to store the metrics to persistent storage. The core monitored metrics will be CPU, RAM, HDD and network utilisation. The core storage methods will be plaintext and RRD (round-robin database). \textit{LIEBERT}'s focus is on performant metric retrieval, therefore there will not be any sort of dashboard with fancy charts to display the data. One of the core storage options, RRD, is however designed for easy storage and visualization of timeseries data, and it will therefore be very easy to create visualizations without the need for external software (except for \textit{RRDtool} itself). RRD is also widely used in the industry to store this sort of data, and will therefore be familiar to most people dealing with \textbf{LIEBERT} \citep{rrdtool}. If time restrictions allow for further development after the initial version is finished, there are numerous extra features that can be added, most notably a plugin system that will allow for collection of any user-supplied metric. Note however that the performance of the plugin system would be considerably lower than what core \textbf{LIEBERT} will be able to offer. The initial version of the package will aim for compatibility with the Linux operating system, because it is the most widely used server operating system \citep{systempop}\footnote{Non-public facing server OS market share is impossible to determine, however from personal experience and blogs of leading technology companies Linux seems to be the most popular}.
+
+
+    \section{Literature review}
+    \section{Analysis and Requirements}
+    \section{Design}
+    \section{Implementation}
+    \section{Results}
+    \section{Testing}
+    \section{Conclusions}
+        \subsection{Discussion and Summary}
+        \subsection{Limitations}
+        \subsection{Possible Future work and Enhancements}
+    \section{References and Bibliography}
+        \bibliographystyle{agsm}
+        \bibliography{requirements}
+    \section{Appendices}
+
+\end{document}

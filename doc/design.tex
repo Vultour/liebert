@@ -1,0 +1,19 @@
+\section{Design}
+    This chapter documents the design of the application, as well as the reasoning behind choices that were made. It tries to enable the reader to understand the architecture of the application regardless of any implementation details, and does not assume the reader has any knowledge of the implementation specifics, nor the underlying platform.
+    
+    \subsection{Server - client architecture}\label{sec:architecture}
+        \textsc{Liebert} consists of two separate applications, the so-called \textit{Agent} (client) and a \textit{Controller} (server). This solution has been chosen both because it is de facto an industry standard (see \textit{Munin}, \textit{Nagios}), and because it simply makes sense. A different approach could entail having a single client application that would perform collection and storage tasks at the same time, this however is less than ideal, as it would violate the core concept of this project - minimal resource usage on the client side, as well as increase the burden on the storage backend (e.g. database), with potentially thousands of clients keeping connections open indefinitely.
+        
+        A client - server architecture brings numerous benefits over the aforementioned approach. It allows processing  to be done on the received data, possibly performing custom normalization or filtering logic. From an infrastructure angle, it enables the creation of a load-balancer, a server-like application that the clients would connect to; however instead of persisting the data into storage, it would perform buffering instead, and send data to the real server periodically, potentially with utilizing compression. Such load-balancers could be placed between network segments in large networks, where hundreds, or thousands, of machines constantly transferring data to a centralized location would create network congestion.
+        
+        \subsubsection{Agent}
+            \textit{Agents} are the applications residing on each individual monitored endpoint. The program should be distributed and installed on all systems where monitoring is desired. \textit{Agents} gather system metrics specified in the configuration, connect to a \textit{Controller} instance, and transmit gathered metrics to it. In the event of loss of connection, \textit{Agent} should buffer data and periodically attempt to re-establish a \textit{Controller} connection.
+            
+        \subsubsection{Controller}
+            Application called the \textit{Controller} is the central part of the platform. It should reside on a single computer system and accept connections from \textit{Agents} on the network. After receiving data from a connected \textit{Agent}, it should transfer it into persistent storage based on the configuration. In the future a \textit{Controller} could potentially be used to issue run-time commands to connected \textit{Agents}, allowing reconfiguration or status checks.
+            
+    \subsection{Network protocol}
+        As \textsc{Liebert} is built using the client-server architecture (see \autoref{sec:architecture}), it is imperative that network communication will be involved. This implies that a suitable protocol must be chosen or developed. Originally there was hope that a tailor-made protocol could be developed using a tool such as  \textit{protobuf}\footnote{Networking library widely popular for protocol implementation in C++ and other languages}, however no such library was available for the chosen implementation language (\textit{Rust}). Manual protocol implementation would be out of scope of this project, potentially complex enough for its own project, therefore it has been decided that all network communication would be done using a simple string protocol.
+        
+        The network protocol specification can be found in \textbf{Appendix A} (\autoref{apd:network}).
+        

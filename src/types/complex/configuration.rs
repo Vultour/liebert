@@ -32,7 +32,7 @@ impl Configuration{
     }
 
     pub fn get_unsafe(&self, path: &str) -> String{
-        self.get(path).expect(format!("FATAL ERROR: Couldn't find option '{}' in configuration", path).as_str())
+        self.get(path).expect(format!("FATAL ERROR: [Bug?] Couldn't find option '{}' in configuration", path).as_str())
     }
 }
 

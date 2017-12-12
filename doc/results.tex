@@ -1,0 +1,67 @@
+\section{Results}
+    The application has been benchmarked using a simple strategy of inspecting its run-time process information on Linux. The data was gathered from a variety of sources, including raw Linux status files such as \textit{/proc/$<$pid$>$/status} or \textit{/proc/$<$pid$>$/sched}, or from system utilities such as \textit{htop}. In order to not only record the application's performance, but compare it to other established monitoring solutions, the same benchmark was also ran for two previously mentioned products - \textbf{Nagios} and \textbf{collectd} (\autoref{sec:similar-software}). These two competitors were chosen due to each of them being focused on a different aspect: features for \textit{Nagios}, and performance for \textit{collectd}.
+    
+    The benchmark consisted of a 30-minute session. After the time expired, a snapshot of the application state data was taken and inspected. The applications were ran with as closely matching configurations as possible (CPU \& memory metrics, 5 minute gather interval, localhost).
+    
+    
+    \subsection{Nagios}
+        Nagios fared surprisingly very well in the benchmark, especially CPU-wise. It's memory usage hovered around the \textbf{60 megabyte} mark. It utilized several single-threaded subprocesses, most notably several "worker" subprocess which appeared to be used for running the metric gathering and plugin architecture. The main process was the largest memory consumer with a stable \textbf{25MB}. 
+        
+        Inspecting the CPU consumption\footnote{CPU usage was determined using \textit{/proc/$<$pid$>$/sched}}, in total the main process used \textbf{1100ms}\footnote{Milliseconds, $1/1000$ of a second} of processor time. Out of this, \textbf{824ms} was consumed by the worker-handling subprocess.
+        
+        One very large disadvantage of Nagios is that it requires the \textit{apache} web server to function. Luckily, this is only required on the main Nagios server, not on all monitored nodes. It however massively increases the requirements for the server, as a bare-bones \textit{apache} install that was installed alongside Nagios consumed about \textit{400MB} of memory when running.
+        
+        \subsubsection{Limitations}
+            There are several things that need to be noted for this benchmark. Firstly, the \textit{Nagios Core} version of the software has been used. This version sacrifices some features in favour of improved performance, therefore there may be a drastic difference between the two versions.
+            
+            Secondly, only the local machine metric gathering was tested. Nagios doesn't use the common server-client architecture, therefore it is very hard to determine its actual memory usage. In order to monitor remote nodes, one can either opt in to use a SSH based remote-execution module which is very inefficient with increasing number of nodes, or install \textit{NRPE} (Nagios Remote Plugin Executor) on remote nodes. The second option is preferred, however incurs a more severe performance penalty compared to SSH.
+    
+            
+    \subsection{collectd}
+        For the \textit{collectd} benchmark, 2 instances of the application were launched: one configured as a client metric gatherer, and another one as a server receiving data and storing it using the \textit{RRD} backend. 
+        
+        \subsubsection{Client}
+            The client \textit{collectd} application consumed \textbf{18MB} of memory while running. After 30 minutes, its processor usage was \textbf{110ms}, most of which is attributed to the "worker" thread handling plugins.
+            
+        \subsubsection{Server}
+            \textit{Collectd} in server configuration was using \textbf{16MB} of memory. \textbf{80ms} of processor time has been consumed during its execution, most of which is once again attributed to the plugin "worker" thread that handled an \textit{RRD} backend this time.
+    
+    
+    \subsection{Liebert}
+        \subsubsection{Agent}
+            During the 30-minute benchmark run, our \textit{liebert-agent} application was consuming memory in the ballpark of \textbf{60MB}. During this time, it used \textbf{1380ms} of processor time. This time was evenly divided between the built-in CPU and memory gatherer threads. Inspecting the threads, we found out that they performed up to \textbf{60000 context switches}.
+            
+        \subsubsection{Controller}
+            The controller application turned out to be surprisingly performant. Its memory usage was \textbf{50MB}, however processor time turned out to be only about \textbf{10 milliseconds} after 30 minutes. Half of the execution time came from the \textit{RRD} storage backend thread. Peculiarly, the network-related threads in both \textit{Agent} and \textit{Controller} only consumed about \textbf{1ms} each.
+            
+            
+    \subsection{Discussion}
+        \begin{figure}
+            \centering
+            \begin{tabular}{ |c|c|c| }
+                \hline
+                    Product & Memory usage & CPU time\\
+                    \hline
+                    \textbf{Nagios} & 60MB & 1100ms\\
+                    \hline
+                    \textbf{collectd (client)} & 18MB & 110ms\\
+                    \hline
+                    \textbf{collectd (server)} & 16MB & 80ms\\
+                    \hline
+                    \textbf{\textsc{Liebert} Agent} & 60MB & 1380ms\\
+                    \hline
+                    \textbf{\textsc{Liebert} Controller} & 50MB & 10ms\\
+                \hline
+            \end{tabular}
+            \caption{Comparison table of benchmarked monitoring solutions}\label{fig:comparison-table-results}
+        \end{figure}
+        
+        Looking at the test results in \autoref{fig:comparison-table-results}, it is clear that the project did not entirely fulfill its promise. Even though most of the code has been written with optimizations in mind, it didn't help us beat even the poorest performer in the benchmark, \textit{Nagios}.
+        
+        Looking deeper into the data, it is almost guaranteed that most of the inefficiencies of the \textit{Agent} application stem from its idling behaviour (described closer in \autoref{sec:notable-issues}). Looking at the context switching metric makes it clear that the idling behaviour is incredibly inefficient, and frequently requires scheduling on the CPU even when there is no work being done. Improving the waiting function to consume no CPU while idle would more than probably bump the application closer to the results of \textit{collectd}, possibly even close to the \textit{Controller}.
+        
+        The \textit{Controller} results are very surprising, given the amount of hidden inefficiencies discovered, such as the multi-threaded memory consumption or the inefficient wait function. This application however doesn't suffer from the wait function problem as all waiting is done through native blocking mechanisms, due to not having the requirements for which the incriminated function has been created. We could therefore venture as far as to say that this is the true image of \textsc{Liebert}, and given enough time it would be possible to get the \textit{Agent} application close to the \textit{Controller} resource usage.
+        
+        The resource usage of \textit{collectd} can most probably be attributed to its plugin system, as it needs to load and run the complex dispatch/receive routing architecture.
+        
+        Additionally it must be stated that even though our \textit{Controller} application beat the \textit{collectd} counterpart, it would be more fair to test in a large-scale environment with hundreds of clients, which is unfortunately impossible. This way \textit{collectd} could benefit from its years of optimizations, especially in the \textit{RRD} storage backend. It, for example, buffers multiple \textit{RRD} updates and executes them as a single command, compared to \textsc{Liebert} which executes them sequentially one-by-one. It is therefore almost given that in a large-scale test \textit{collectd} would outperform both \textit{Liebert} applications.

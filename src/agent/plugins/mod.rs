@@ -24,7 +24,7 @@ pub struct Controller{
 impl Controller{
     pub fn new(conf: types::Configuration, control_tx: super::MessageSender) -> Result<Controller, String>{
         let (pipe_tx, pipe_rx) = sync::mpsc::channel();
-        match thread::Builder::new().name(String::from("plugins_controller")).spawn(
+        match thread::Builder::new().name(String::from("plg-controller")).spawn(
             move || {
                 let control_tx = control_tx;
                 let plugin_rx = pipe_rx;

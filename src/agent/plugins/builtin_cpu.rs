@@ -132,3 +132,21 @@ fn get_current_jiffies(re: &Regex) -> Option<[i32; 7]> {
 
     Some(result)
 }
+
+
+
+#[test]
+fn t_get_current_jiffies() {
+    let re = match Regex::new(r"^cpu\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+)") {
+        Ok(re)  => re,
+        Err(e)  => panic!("TODO: Handle regex compilation failure")
+    };
+    let jiffies = get_current_jiffies(&re);
+    assert_ne!(None, jiffies);
+    assert_eq!(7, jiffies.unwrap().len());
+}
+
+#[tets]
+fn t_format() {
+    // STUB
+}

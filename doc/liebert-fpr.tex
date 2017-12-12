@@ -1,0 +1,71 @@
+\documentclass[12pt,a4paper,table]{article}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{pgfgantt}
+\usepackage{natbib}
+\usepackage{multirow}
+\usepackage{pdflscape}
+\usepackage{longtable}
+\usepackage{fancyvrb}
+
+\renewcommand{\baselinestretch}{1.5}
+\def\subsubsectionautorefname{subsection}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\graphicspath{{img/}}
+
+
+\begin{document}
+
+
+    \begin{titlepage}
+        \vspace*{1.5cm}
+        \begin{center}
+            \Huge{\textsc{Liebert} server monitoring platform}\\
+            \Large{Martin Kukura}\\
+        \end{center}
+        \vspace*{\fill}
+        \begin{center}
+            \Large{Supervisor: Girish Lukka}\\
+            \Large{Date: 2nd May 2017}\\
+            \Large{Department: Computer Science}\\
+            \Large{Key words: performance, monitoring, rust}\\
+        \end{center}
+        \vspace*{\fill}
+        \center{\large{This report is submitted in partial fulfilment of the requirements for the BEng(Hons) Software Engineering degree at the University of Westminster.}}
+    \end{titlepage}
+    \clearpage
+
+    \tableofcontents
+	\clearpage
+    \listoffigures
+
+    \clearpage
+    
+    \input{introduction.tex}
+    \clearpage
+    \input{requirements.tex}
+    \clearpage
+    \input{design.tex}
+    \clearpage
+    \input{implementation.tex}
+    \clearpage
+    \input{testing.tex}
+    \clearpage
+    \input{results.tex}
+    \clearpage
+    \input{conclusion.tex}
+    \clearpage
+    \input{glossary.tex}
+    \clearpage
+    \input{references.tex}
+    \clearpage
+    \input{appendices.tex}
+
+\end{document}

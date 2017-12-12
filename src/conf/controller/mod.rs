@@ -15,13 +15,15 @@ pub type ConfigResult = Result<types::ConfigurationMap, String>;
 fn get_defaults() -> types::ConfigurationMap{
     let mut config = types::ConfigurationMap::new();
 
-    config.insert(String::from("controller.secret"),             String::from("d34db33f"));
-    config.insert(String::from("controller.host"),               String::from("127.0.0.1"));
-    config.insert(String::from("controller.port"),               String::from("7777"));
+    config.insert(String::from("controller.secret"),            String::from("d34db33f"));
+    config.insert(String::from("controller.host"),              String::from("127.0.0.1"));
+    config.insert(String::from("controller.port"),              String::from("7777"));
 
-    config.insert(String::from(".plugins"),                      String::from("0"));
+    config.insert(String::from(".plugins"),                     String::from("0"));
 
-    config.insert(String::from("builtin.rrd.enabled"),           String::from("true"));
+    config.insert(String::from("builtin.rrd.enabled"),          String::from("true"));
+    config.insert(String::from("builtin.rrd.binary"),           String::from("/bin/rrdtool"));
+    config.insert(String::from("builtin.rrd.data"),             String::from("/tmp"));
 
     config
 }

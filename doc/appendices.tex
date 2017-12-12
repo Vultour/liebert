@@ -1,0 +1,408 @@
+\section{Appendices}
+    
+    \subsection{Appendix A: Network protocol specification}\label{apd:network}
+        \begin{verbatim}
+<data-spec> | <format-block>
+                
+data-spec:
+    DATA <metric-name> <data1> [<data2> [...]]
+                    
+format-block:
+    FORMAT <metric-name>
+    <format-spec>
+    [<format-spec>]
+    [...]
+    FORMAT END
+                        
+format-spec:
+    <metric-type> <data-source> <heartbeat> <min> <max>
+                        
+metric-type: 1 | 2
+<metric-type> represents RRD data source type:
+    1 - gauge
+    2 - counter
+                        
+metric-name, data-source: (a-zA-Z.-)
+                    
+heartbeat: unsigned 32-bit integer
+
+min, max: U | signed 64-bit integer
+
+data: signed 64-bit integer
+        \end{verbatim}
+
+    \subsection{Appendix B: Controller pmap output}\label{apd:pmap-controller}
+        \begin{verbatim}
+14103:   target/release/liebert-controller
+Address           Kbytes     RSS   Dirty Mode  Mapping
+000055e46320d000       0       0       0 r-x-- liebert-controller
+000055e463568000       0       0       0 r---- liebert-controller
+000055e463571000       0       0       0 rw--- liebert-controller
+000055e463572000       0       0       0 rw---   [ anon ]
+00007f6b13a00000       0       0       0 rw---   [ anon ]
+00007f6b13ffe000       0       0       0 -----   [ anon ]
+00007f6b13fff000       0       0       0 rw---   [ anon ]
+00007f6b141ff000       0       0       0 -----   [ anon ]
+00007f6b14200000       0       0       0 rw---   [ anon ]
+00007f6b14bff000       0       0       0 -----   [ anon ]
+00007f6b14c00000       0       0       0 rw---   [ anon ]
+00007f6b151fd000       0       0       0 -----   [ anon ]
+00007f6b151fe000       0       0       0 rw---   [ anon ]
+00007f6b153fe000       0       0       0 -----   [ anon ]
+00007f6b15600000       0       0       0 rw---   [ anon ]
+00007f6b15cff000       0       0       0 r-x-- libm-2.21.so
+00007f6b15e06000       0       0       0 ----- libm-2.21.so
+00007f6b16005000       0       0       0 r---- libm-2.21.so
+00007f6b16006000       0       0       0 rw--- libm-2.21.so
+00007f6b16007000       0       0       0 r-x-- libc-2.21.so
+00007f6b161be000       0       0       0 ----- libc-2.21.so
+00007f6b163be000       0       0       0 r---- libc-2.21.so
+00007f6b163c2000       0       0       0 rw--- libc-2.21.so
+00007f6b163c4000       0       0       0 rw---   [ anon ]
+00007f6b163c8000       0       0       0 r-x-- libgcc_s-5.3.1-20160406.so.1
+00007f6b163de000       0       0       0 ----- libgcc_s-5.3.1-20160406.so.1
+00007f6b165dd000       0       0       0 r---- libgcc_s-5.3.1-20160406.so.1
+00007f6b165de000       0       0       0 rw--- libgcc_s-5.3.1-20160406.so.1
+00007f6b165df000       0       0       0 r-x-- libpthread-2.21.so
+00007f6b165f6000       0       0       0 ----- libpthread-2.21.so
+00007f6b167f5000       0       0       0 r---- libpthread-2.21.so
+00007f6b167f7000       0       0       0 rw--- libpthread-2.21.so
+00007f6b167f8000       0       0       0 rw---   [ anon ]
+00007f6b167fc000       0       0       0 r-x-- librt-2.21.so
+00007f6b16803000       0       0       0 ----- librt-2.21.so
+00007f6b16a02000       0       0       0 r---- librt-2.21.so
+00007f6b16a03000       0       0       0 rw--- librt-2.21.so
+00007f6b16a04000       0       0       0 r-x-- libdl-2.21.so
+00007f6b16a07000       0       0       0 ----- libdl-2.21.so
+00007f6b16c06000       0       0       0 r---- libdl-2.21.so
+00007f6b16c07000       0       0       0 rw--- libdl-2.21.so
+00007f6b16c08000       0       0       0 r-x-- ld-2.21.so
+00007f6b16e01000       0       0       0 rw---   [ anon ]
+00007f6b16e19000       0       0       0 rw---   [ anon ]
+00007f6b16e28000       0       0       0 r---- ld-2.21.so
+00007f6b16e29000       0       0       0 rw--- ld-2.21.so
+00007f6b16e2a000       0       0       0 rw---   [ anon ]
+00007ffe59340000       0       0       0 -----   [ anon ]
+00007ffe59b1e000       0       0       0 rw---   [ stack ]
+00007ffe59b88000       0       0       0 r----   [ anon ]
+00007ffe59b8a000       0       0       0 r-x--   [ anon ]
+ffffffffff600000       0       0       0 r-x--   [ anon ]
+000055e463571000       4       4       4 rw--- liebert-controller
+000055e463572000       4       4       4 rw---   [ anon ]
+00007f6b13ffe000       4       0       0 -----   [ anon ]
+00007f6b141ff000       4       0       0 -----   [ anon ]
+00007f6b14bff000       4       0       0 -----   [ anon ]
+00007f6b151fd000       4       0       0 -----   [ anon ]
+00007f6b153fe000       4       0       0 -----   [ anon ]
+00007f6b155ff000       4       0       0 -----   [ anon ]
+00007f6b16005000       4       4       4 r---- libm-2.21.so
+00007f6b16006000       4       4       4 rw--- libm-2.21.so
+00007f6b165dd000       4       4       4 r---- libgcc_s-5.3.1-20160406.so.1
+00007f6b165de000       4       4       4 rw--- libgcc_s-5.3.1-20160406.so.1
+00007f6b167f7000       4       4       4 rw--- libpthread-2.21.so
+00007f6b16a02000       4       4       4 r---- librt-2.21.so
+00007f6b16a03000       4       4       4 rw--- librt-2.21.so
+00007f6b16c06000       4       4       4 r---- libdl-2.21.so
+00007f6b16c07000       4       4       4 rw--- libdl-2.21.so
+00007f6b16e28000       4       4       4 r---- ld-2.21.so
+00007f6b16e29000       4       4       4 rw--- ld-2.21.so
+00007f6b16e2a000       4       4       4 rw---   [ anon ]
+00007ffe59340000       4       0       0 -----   [ anon ]
+ffffffffff600000       4       0       0 r-x--   [ anon ]
+00007f6b163c2000       8       8       8 rw--- libc-2.21.so
+00007f6b167f5000       8       8       8 r---- libpthread-2.21.so
+00007ffe59b88000       8       0       0 r----   [ anon ]
+00007ffe59b8a000       8       4       0 r-x--   [ anon ]
+00007f6b16a04000      12      12       0 r-x-- libdl-2.21.so
+00007f6b163be000      16      16      16 r---- libc-2.21.so
+00007f6b163c4000      16      12      12 rw---   [ anon ]
+00007f6b167f8000      16       4       4 rw---   [ anon ]
+00007f6b16e01000      20      20      20 rw---   [ anon ]
+00007f6b167fc000      28      16       0 r-x-- librt-2.21.so
+000055e463568000      36      36      36 r---- liebert-controller
+00007f6b16e19000      60       4       4 rw---   [ anon ]
+00007f6b163c8000      88      88       0 r-x-- libgcc_s-5.3.1-20160406.so.1
+00007f6b165df000      92      92       0 r-x-- libpthread-2.21.so
+00007f6b16c08000     132     132       0 r-x-- ld-2.21.so
+00007ffe59b1e000     136      48      48 rw---   [ stack ]
+00007f6b15cff000    1052     192       0 r-x-- libm-2.21.so
+000055e46320d000    1392    1228       0 r-x-- liebert-controller
+00007f6b16007000    1756    1316       0 r-x-- libc-2.21.so
+00007f6b15e06000    2044       0       0 ----- libm-2.21.so
+00007f6b163de000    2044       0       0 ----- libgcc_s-5.3.1-20160406.so.1
+00007f6b165f6000    2044       0       0 ----- libpthread-2.21.so
+00007f6b16803000    2044       0       0 ----- librt-2.21.so
+00007f6b16a07000    2044       0       0 ----- libdl-2.21.so
+00007f6b13fff000    2048      12      12 rw---   [ anon ]
+00007f6b151fe000    2048      12      12 rw---   [ anon ]
+00007f6b153ff000    2048       8       8 rw---   [ anon ]
+00007f6b161be000    2048       0       0 ----- libc-2.21.so
+00007f6b13a00000    4096      48      48 rw---   [ anon ]
+00007f6b14c00000    4096      24      24 rw---   [ anon ]
+00007f6b15600000    6144     344     344 rw---   [ anon ]
+00007f6b14200000    8192     116     116 rw---   [ anon ]
+---------------- ------- ------- -------
+total kB           45912    3856     776
+        \end{verbatim}
+            
+    \pagebreak
+            
+    \subsection{Appendix C: Agent pmap output}\label{apd:pmap-agent}
+        \begin{verbatim}
+17380:   target/release/liebert-agent
+Address           Kbytes     RSS   Dirty Mode  Mapping
+000055dec76e1000       0       0       0 r-x-- liebert-agent
+000055dec7aba000       0       0       0 r---- liebert-agent
+000055dec7ac6000       0       0       0 rw--- liebert-agent
+000055dec7ac7000       0       0       0 rw---   [ anon ]
+00007fc7c3000000       0       0       0 rw---   [ anon ]
+00007fc7c37fe000       0       0       0 -----   [ anon ]
+00007fc7c37ff000       0       0       0 rw---   [ anon ]
+00007fc7c39ff000       0       0       0 -----   [ anon ]
+00007fc7c3a00000       0       0       0 rw---   [ anon ]
+00007fc7c47fa000       0       0       0 -----   [ anon ]
+00007fc7c47fb000       0       0       0 rw---   [ anon ]
+00007fc7c49fb000       0       0       0 -----   [ anon ]
+00007fc7c49fc000       0       0       0 rw---   [ anon ]
+00007fc7c4bfc000       0       0       0 -----   [ anon ]
+00007fc7c4bfd000       0       0       0 rw---   [ anon ]
+00007fc7c4dfd000       0       0       0 -----   [ anon ]
+00007fc7c4dfe000       0       0       0 rw---   [ anon ]
+00007fc7c4ffe000       0       0       0 -----   [ anon ]
+00007fc7c4fff000       0       0       0 rw---   [ anon ]
+00007fc7c51ff000       0       0       0 -----   [ anon ]
+00007fc7c5200000       0       0       0 rw---   [ anon ]
+00007fc7c5829000       0       0       0 r-x-- libm-2.21.so
+00007fc7c5930000       0       0       0 ----- libm-2.21.so
+00007fc7c5b2f000       0       0       0 r---- libm-2.21.so
+00007fc7c5b30000       0       0       0 rw--- libm-2.21.so
+00007fc7c5b31000       0       0       0 r-x-- libc-2.21.so
+00007fc7c5ce8000       0       0       0 ----- libc-2.21.so
+00007fc7c5ee8000       0       0       0 r---- libc-2.21.so
+00007fc7c5eec000       0       0       0 rw--- libc-2.21.so
+00007fc7c5eee000       0       0       0 rw---   [ anon ]
+00007fc7c5ef2000       0       0       0 r-x-- libgcc_s-5.3.1-20160406.so.1
+00007fc7c5f08000       0       0       0 ----- libgcc_s-5.3.1-20160406.so.1
+00007fc7c6107000       0       0       0 r---- libgcc_s-5.3.1-20160406.so.1
+00007fc7c6108000       0       0       0 rw--- libgcc_s-5.3.1-20160406.so.1
+00007fc7c6109000       0       0       0 r-x-- libpthread-2.21.so
+00007fc7c6120000       0       0       0 ----- libpthread-2.21.so
+00007fc7c631f000       0       0       0 r---- libpthread-2.21.so
+00007fc7c6321000       0       0       0 rw--- libpthread-2.21.so
+00007fc7c6322000       0       0       0 rw---   [ anon ]
+00007fc7c6326000       0       0       0 r-x-- librt-2.21.so
+00007fc7c632d000       0       0       0 ----- librt-2.21.so
+00007fc7c652c000       0       0       0 r---- librt-2.21.so
+00007fc7c652d000       0       0       0 rw--- librt-2.21.so
+00007fc7c652e000       0       0       0 r-x-- libdl-2.21.so
+00007fc7c6531000       0       0       0 ----- libdl-2.21.so
+00007fc7c6730000       0       0       0 r---- libdl-2.21.so
+00007fc7c6731000       0       0       0 rw--- libdl-2.21.so
+00007fc7c6732000       0       0       0 r-x-- ld-2.21.so
+00007fc7c692b000       0       0       0 rw---   [ anon ]
+00007fc7c693f000       0       0       0 rw---   [ anon ]
+00007fc7c6952000       0       0       0 r---- ld-2.21.so
+00007fc7c6953000       0       0       0 rw--- ld-2.21.so
+00007fc7c6954000       0       0       0 rw---   [ anon ]
+00007ffdfc35d000       0       0       0 -----   [ anon ]
+00007ffdfcb3b000       0       0       0 rw---   [ stack ]
+00007ffdfcb6c000       0       0       0 r----   [ anon ]
+00007ffdfcb6e000       0       0       0 r-x--   [ anon ]
+ffffffffff600000       0       0       0 r-x--   [ anon ]
+000055dec7ac6000       4       4       4 rw--- liebert-agent
+000055dec7ac7000       4       4       4 rw---   [ anon ]
+00007fc7c37fe000       4       0       0 -----   [ anon ]
+00007fc7c39ff000       4       0       0 -----   [ anon ]
+00007fc7c47fa000       4       0       0 -----   [ anon ]
+00007fc7c49fb000       4       0       0 -----   [ anon ]
+00007fc7c4bfc000       4       0       0 -----   [ anon ]
+00007fc7c4dfd000       4       0       0 -----   [ anon ]
+00007fc7c4ffe000       4       0       0 -----   [ anon ]
+00007fc7c51ff000       4       0       0 -----   [ anon ]
+00007fc7c5b2f000       4       4       4 r---- libm-2.21.so
+00007fc7c5b30000       4       4       4 rw--- libm-2.21.so
+00007fc7c6107000       4       4       4 r---- libgcc_s-5.3.1-20160406.so.1
+00007fc7c6108000       4       4       4 rw--- libgcc_s-5.3.1-20160406.so.1
+00007fc7c6321000       4       4       4 rw--- libpthread-2.21.so
+00007fc7c652c000       4       4       4 r---- librt-2.21.so
+00007fc7c652d000       4       4       4 rw--- librt-2.21.so
+00007fc7c6730000       4       4       4 r---- libdl-2.21.so
+00007fc7c6731000       4       4       4 rw--- libdl-2.21.so
+00007fc7c6952000       4       4       4 r---- ld-2.21.so
+00007fc7c6953000       4       4       4 rw--- ld-2.21.so
+00007fc7c6954000       4       4       4 rw---   [ anon ]
+00007ffdfc35d000       4       0       0 -----   [ anon ]
+ffffffffff600000       4       0       0 r-x--   [ anon ]
+00007fc7c5eec000       8       8       8 rw--- libc-2.21.so
+00007fc7c631f000       8       8       8 r---- libpthread-2.21.so
+00007ffdfcb6c000       8       0       0 r----   [ anon ]
+00007ffdfcb6e000       8       4       0 r-x--   [ anon ]
+00007fc7c652e000      12      12       0 r-x-- libdl-2.21.so
+00007fc7c5ee8000      16      16      16 r---- libc-2.21.so
+00007fc7c5eee000      16      12      12 rw---   [ anon ]
+00007fc7c6322000      16       4       4 rw---   [ anon ]
+00007fc7c692b000      20      20      20 rw---   [ anon ]
+00007fc7c6326000      28      28       0 r-x-- librt-2.21.so
+000055dec7aba000      48      48      48 r---- liebert-agent
+00007fc7c693f000      76       4       4 rw---   [ anon ]
+00007fc7c5ef2000      88      88       0 r-x-- libgcc_s-5.3.1-20160406.so.1
+00007fc7c6109000      92      92       0 r-x-- libpthread-2.21.so
+00007fc7c6732000     132     120       0 r-x-- ld-2.21.so
+00007ffdfcb3b000     136      44      44 rw---   [ stack ]
+00007fc7c5829000    1052     220       0 r-x-- libm-2.21.so
+00007fc7c5b31000    1756    1276       0 r-x-- libc-2.21.so
+000055dec76e1000    1896    1596       0 r-x-- liebert-agent
+00007fc7c5930000    2044       0       0 ----- libm-2.21.so
+00007fc7c5f08000    2044       0       0 ----- libgcc_s-5.3.1-20160406.so.1
+00007fc7c6120000    2044       0       0 ----- libpthread-2.21.so
+00007fc7c632d000    2044       0       0 ----- librt-2.21.so
+00007fc7c6531000    2044       0       0 ----- libdl-2.21.so
+00007fc7c37ff000    2048      44      44 rw---   [ anon ]
+00007fc7c47fb000    2048      12      12 rw---   [ anon ]
+00007fc7c49fc000    2048      12      12 rw---   [ anon ]
+00007fc7c4bfd000    2048      12      12 rw---   [ anon ]
+00007fc7c4dfe000    2048      16      16 rw---   [ anon ]
+00007fc7c4fff000    2048       8       8 rw---   [ anon ]
+00007fc7c5ce8000    2048       0       0 ----- libc-2.21.so
+00007fc7c3000000    6144     892     892 rw---   [ anon ]
+00007fc7c5200000    6144     428     428 rw---   [ anon ]
+00007fc7c3a00000   12288     168     168 rw---   [ anon ]
+---------------- ------- ------- -------
+total kB           54644    5248    1812
+            \end{verbatim}
+            
+    \begin{landscape}
+        \subsection{Appendix D: Gantt chart}\label{apd:gantt}
+                \vspace{1cm}
+                \begin{ganttchart}[
+                    vgrid,
+                    hgrid,
+                    x unit=1.32cm,
+                    link/.style={-latex, draw=red, fill=red}
+                ]{1}{16}
+                    \gantttitle{September}{2}
+                    \gantttitle{October}{2}
+                    \gantttitle{November}{2}
+                    \gantttitle{December}{2}
+                    \gantttitle{January}{2}
+                    \gantttitle{February}{2}
+                    \gantttitle{March}{2}
+                    \gantttitle{April}{2} \\
+    
+                    \ganttbar{Requirements}{1}{6}
+                    \ganttbar[inline]{further requirement discovery}{8}{16} \\
+                    \ganttbar{Architecture}{4}{8} \\
+                    \ganttbar{Protocols}{4}{10} \\
+                    \ganttbar{Rust basics}{1}{6} \\
+                    \ganttbar{Initial version}{4}{9} \\
+                    \ganttbar{Features}{10}{16}
+                    \ganttbar[inline]{agile - scrum}{10}{16}\\
+                    \ganttbar{Report}{3}{6}
+                    \ganttbar[inline]{Requirements}{3}{6}
+                    \ganttbar[inline]{Final report}{10}{16}
+    
+                    \ganttlink[link type=f-s]{elem5}{elem6}
+                    \ganttlink{elem0}{elem1}
+                    \ganttlink{elem9}{elem10}
+                \end{ganttchart}
+    \end{landscape}
+    
+    
+    \subsection{Appendix E: Configuration structure}\label{apd:config}
+        \begin{verbatim}
+pub type ConfigurationMap   = HashMap<String, String>;
+pub type ConfigurationMutex = sync::Arc<sync::Mutex<ConfigurationMap>>;
+
+pub struct Configuration {
+    conf: ConfigurationMutex
+}
+
+impl Configuration {
+    pub fn new(c: ConfigurationMutex) -> Configuration {
+        Configuration{ conf: c }
+    }
+
+    pub fn clone(&self) -> Configuration {
+        Configuration{ conf: self.conf.clone() }
+    }
+
+    pub fn clone_inner(&self) -> ConfigurationMutex {
+        self.conf.clone()
+    }
+}
+
+impl Configuration {
+    pub fn get(&self, path: &str) -> Option<String> {
+        let c = self.conf.lock().expect("FATAL ERROR: Couldn't 
+            lock configuration mutex");
+        match c.get(path) {
+            Some(item)  => { return Some((*item).clone()); }
+            None        => { return None; }
+        }
+    }
+
+    pub fn get_unsafe(&self, path: &str) -> String {
+        self.get(path).expect(format!("FATAL ERROR: Couldn't find option '{}'
+            in configuration", path).as_str())
+    }
+}
+
+impl fmt::Debug for Configuration{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let data = self.conf.lock().expect("FATAL ERROR: Couldn't 
+            lock configuration mutex");
+        data.fmt(f)
+    }
+}
+        \end{verbatim}
+        
+    
+    \pagebreak
+    
+    \subsection{Appendix F: An example integration test}\label{apd:integration-test}
+        \begin{verbatim}
+extern crate liebert;
+
+use std::collections::HashMap;
+use sync::{mpsc, Arc, Mutex};
+
+#[test]
+fn plugin_builtin_cpu() {
+    let config = HashMap::new();
+    config.insert("builtin.cpu.enabled",  "true");
+    config.insert("builtin.cpu.interval", "1");
+
+    let config = liebert::types::Configuration::new(
+        Arc::new(Mutex::new(config))
+    );
+    let (tx, rx) = mpsc::channel();
+
+    match liebert::agent::plugins
+     ::builtin_cpu::start_builtin_cpu(config, tx) {
+        Ok(meta) => {
+            assert_eq!("builtin.cpu", meta.0);
+        },
+        Err(_) => { assert!(false); }
+    }
+
+    match rx.recv() {
+        Ok(msg) => {
+            match msg {
+                liebert::agent::Message::Data(id, time, data) => {
+                    assert_eq!("builtin.cpu", id);
+                    assert(time > 0);
+
+                    let mut iter = data.split_whitespace();
+                    assert(i64::from_str(it.next()).is_ok());
+                    assert(i64::from_str(it.next()).is_ok());
+                    assert(i64::from_str(it.next()).is_ok());
+                    assert(i64::from_str(it.next()).is_ok());
+                    assert_eq!(None, it.next());
+                },
+                _ => { assert!(false); }
+            }
+        },
+        Err(_) => { assert!(false); }
+    }
+}
+        \end{verbatim}

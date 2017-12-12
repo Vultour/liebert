@@ -7,6 +7,10 @@ use ::types;
 use super::Message;
 
 
+mod router;
+mod builtin_rrd;
+
+
 type NamedPluginTuple   = (String, super::MessageSender, thread::JoinHandle<()>);
 type PluginTuple        = (super::MessageSender, thread::JoinHandle<()>);
 type NamedSenderHashMap = HashMap<String, PluginTuple>;
@@ -27,23 +31,45 @@ pub struct Controller{
 impl Controller{
     pub fn new(conf: types::Configuration, control_tx: super::MessageSender) -> Result<Controller, String>{
         let (pipe_tx, pipe_rx) = sync::mpsc::channel();
-        match thread::Builder::new().name(String::from("plugins_controller")).spawn(
+        match thread::Builder::new().name(String::from("plg-controller")).spawn(
             move || {
                 let control_tx = control_tx;
                 let plugin_rx = pipe_rx;
 
-                let default_plugins = start_default_plugins(conf.clone(), control_tx.clone());
-                start_extra_plugins(conf.clone(), control_tx.clone());
+                let builtin_plugins = start_default_plugins(conf.clone(), control_tx.clone());
+                let extra_plugins   = start_extra_plugins(conf.clone(), control_tx.clone());
+
+                let mut router = router::Router::new();
+
+                for (key, value) in builtin_plugins {
+                    router.add("builtin.cpu".into(), value.0.clone());
+                    router.add("builtin.memory".into(), value.0.clone());
+                }
 
                 for message in plugin_rx{
                     match message{
+                        Message::Format(ref h, ref m, ref f) => {
+                            match router.get_channels(&m) {
+                                None    => { },
+                                Some(c) => {
+                                    for route in c {
+                                        route.send(message.clone()).expect("Tried to send format message to a dead plugin");
+                                    }
+                                }
+                            }
+                        },
+                        Message::Data(ref h, ref m, ref t, ref d) => {
+                            match router.get_channels(&m) {
+                                None    => { },
+                                Some(c) => {
+                                    for route in c {
+                                        route.send(message.clone()).expect("Tried to send data message to a dead plugin");
+                                    }
+                                }
+                            }
+                        },
                         Message::Shutdown(m) => {
                             debug!("Plugins thread received a shutdown command: {}", m);
-                            for (name, plugin) in default_plugins {
-                                debug!("Trying to shutdown '{}'", name);
-                                plugin.0.send(Message::Shutdown("Global shutdown".into()));
-                                plugin.1.join();
-                            }
                             return;
                         }
                         _                           => { error!("[BUG] Plugins thread received unknown message: {}", message); }
@@ -61,10 +87,10 @@ impl Controller{
 fn start_default_plugins(c: types::Configuration, control_tx: super::MessageSender) -> NamedSenderHashMap{
     let mut plugin_channels = NamedSenderHashMap::new();
 
-    //match builtin_cpu::start_builtin_cpu(c.clone(), control_tx.clone()) {
-    //    Ok(pt) => { plugin_channels.insert(pt.0, (pt.1, pt.2)); },
-    //    Err(e) => { error!("Couldn't start builtin CPU collector: {}", e); }
-    //}
+    match builtin_rrd::start_builtin_rrd(c.clone(), control_tx.clone()) {
+        Ok(pt) => { plugin_channels.insert(pt.0, (pt.1, pt.2)); },
+        Err(e) => { error!("Couldn't start builtin RRD plugin: {}", e); }
+    }
 
     plugin_channels
 }

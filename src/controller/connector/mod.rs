@@ -41,7 +41,7 @@ impl Connector {
                 //let data_queue_rx = sync::Arc::new(sync::Mutex::new(data_queue_rx));
                 let host = conf.get_unsafe("controller.host");
                 let port = u32::from_str(&conf.get_unsafe("controller.port")).expect("FATAL ERROR: Couldn't convert controller.port to an integer");
-                match thread::Builder::new().name("connector_listener".into()).spawn(
+                match thread::Builder::new().name("connector-listener".into()).spawn(
                     move || {
                         let listener = match net::TcpListener::bind(format!("{}:{}", host, port).as_str()) {
                             Ok(l)  => l,
@@ -77,10 +77,10 @@ impl Connector {
                     match connector_rx.recv() {
                         Ok(msg) => {
                             match msg {
-                                super::Message::Data(n, t, m)    => {
+                                super::Message::Data(h, n, t, m)    => {
                                     debug!("Connector received data - {} [{}]", n, t);
                                 },
-                                super::Message::Format(n, m)  => {
+                                super::Message::Format(h, n, m)  => {
                                     debug!("Connector received format for {}", n);
                                 },
                                 super::Message::Shutdown(m)     => {
@@ -105,9 +105,14 @@ impl Connector {
 
 
 fn handle_read(stream: net::TcpStream, control_pipe: ConnectorMessageSender) {
-    match thread::Builder::new().name("connector_reader".into()).spawn(
+    match thread::Builder::new().name("con-reader".into()).spawn(
         move || {
+            let host = match stream.peer_addr().expect("Couldn't get socket info") {
+                net::SocketAddr::V4(s) => s.ip().to_string(),
+                net::SocketAddr::V6(s) => s.ip().to_string()
+            };
             let mut reader = BufReader::new(stream);
+            let mut decoder = decoder::Decoder::new(control_pipe.clone(), host);
 
             debug!("Connector reader started");
 
@@ -120,12 +125,12 @@ fn handle_read(stream: net::TcpStream, control_pipe: ConnectorMessageSender) {
                             return;
                         }
 
-                        control_pipe.send(decoder::decode(&buffer));
+                        decoder.decode(&buffer);
                     }
                     Err(e) => panic!("FATAL ERROR: Connector reader couldn't read line - {}", e)
                 }
 
-                debug!("Received a message from an agent: '{}'", buffer);
+                trace!("Received a message from an agent: '{}'", buffer);
             }
         }
     ) {
@@ -135,7 +140,7 @@ fn handle_read(stream: net::TcpStream, control_pipe: ConnectorMessageSender) {
 }
 
 fn handle_write(stream: net::TcpStream, connector_pipe: ConnectorMessageSender) -> thread::JoinHandle<()> {
-    match thread::Builder::new().name("connector_writer".into()).spawn(
+    match thread::Builder::new().name("con-writer".into()).spawn(
         move || {
             let mut writer = BufWriter::new(stream);
 

@@ -58,7 +58,7 @@ fn main(){
 
     debug!("Logger initialized with log level {}", log_level);
     info!("Initializing");
-    debug!("Loaded configuration: {:#?}", conf);
+    // debug!("Loaded configuration: {:#?}", conf);
 
     // Start the signal handler
     trace!("Trying to start signal handler");
@@ -78,18 +78,26 @@ fn main(){
         Err(e) => panic!("FATAL ERROR: Couldn't start connector - {}", e)
     };
 
+    let plugins = match controller::plugins::Controller::new(conf.clone(), tx_control.clone()) {
+        Ok(p)  => p,
+        Err(e) => panic!("FATAL ERROR: Couldn't start plugins - {}", e)
+    };
+
     watchdog.watch(connector.thread_handle);
+    watchdog.watch(plugins.thread_handle);
 
     trace!("Entering main message loop");
     loop {
         match rx_control.recv() {
             Ok(msg) => {
                 match msg {
-                    controller::Message::Data(n, t, d) => {
+                    controller::Message::Data(ref h, ref n, ref t, ref d) => {
                         debug!("Data for {} at {}", n, t);
+                        plugins.channel_in.send(msg.clone());
                     },
-                    controller::Message::Format(n, f) => {
+                    controller::Message::Format(ref h, ref n, ref f) => {
                         debug!("Format for {}", n);
+                        plugins.channel_in.send(msg.clone());
                     }
                     controller::Message::Shutdown(m) => {
                         info!("Received shutdown command - {}", m);
